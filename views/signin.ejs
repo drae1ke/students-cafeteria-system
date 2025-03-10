@@ -20,17 +20,27 @@
       <button class="auth-tab" onclick="switchForm('signup')">Create Account</button>
     </div>
 
+        <% if (success) { %> 
+            <div class="alert alert-success"><%= success %></div>
+        <% } %>
+        
+        <% if (error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+  
+  
+
     <!-- Login Form -->
     <form id="login-form" class="auth-form active" action="/auth" method="POST">
       <h2>Login</h2>
       <div class="form-group">
         <label>Student ID</label>
-        <input type="text" id="login-regno" required>
+        <input type="text" id="login-regno" name="regno" required>
         <div class="error-message" id="login-regno-error"></div>
       </div>
       <div class="form-group password-toggle">
         <label>Password</label>
-        <input type="password" id="login-password" required spellcheck="false">
+        <input type="password" id="login-password" name="pwd" required spellcheck="false">
         <i class="toggle-password fas fa-eye" onclick="togglePassword('login-password')"></i>
         <div class="error-message" id="login-password-error"></div>
       </div>
@@ -46,28 +56,29 @@
       <h2>Create Account</h2>
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" id="signup-username" required spellcheck="false">
+        <input type="text" id="signup-username" name="user" required>
+
         <div class="error-message" id="signup-username-error"></div>
       </div>
       <div class="form-group">
         <label>Student ID</label>
-        <input type="text" id="signup-regno" required>
+        <input type="text" id="signup-regno" name="regno" required>
         <div class="error-message" id="signup-regno-error"></div>
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="signup-email" required>
+        <input type="email" id="signup-email" name="email" required>
         <div class="error-message" id="signup-email-error"></div>
       </div>
       <div class="form-group password-toggle">
         <label>Password</label>
-        <input type="password" id="signup-password" required>
+        <input type="password" id="signup-password" name="pwd" required>
         <i class="toggle-password fas fa-eye" onclick="togglePassword('signup-password')"></i>
         <div class="error-message" id="signup-password-error"></div>
       </div>
       <div class="form-group password-toggle">
         <label>Confirm Password</label>
-        <input type="password" id="confirm-password" required>
+        <input type="password" id="confirm-password" name="confirmPwd" required>
         <i class="toggle-password fas fa-eye" onclick="togglePassword('confirm-password')"></i>
         <div class="error-message" id="confirm-password-error"></div>
       </div>

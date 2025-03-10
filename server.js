@@ -9,6 +9,7 @@ const errorHandler = require('./middleware/errorHandler');
 const verifyJWT = require('./middleware/verifyJWT');
 const cookieParser = require('cookie-parser');
 const credentials = require('./middleware/credentials');
+const flashMiddleware = require('./middleware/flash');
 const mongoose = require('mongoose');
 const connectDB = require('./config/dbConn');
 const PORT = process.env.PORT || 3500;
@@ -21,14 +22,13 @@ connectDB();
 
 // custom middleware logger
 app.use(logger);
-
+flashMiddleware(app);
 // Handle options credentials check - before CORS!
 // and fetch cookies credentials requirement
 app.use(credentials);
 
 // Cross Origin Resource Sharing
 app.use(cors(corsOptions));
-
 // built-in middleware to handle urlencoded form data
 app.use(express.urlencoded({ extended: false }));
 
@@ -49,9 +49,12 @@ app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 //app.use('/password', require('./routes/password'));
 
+
+app.use('/menuroute', require('./routes/api/menuroute'));
 app.use(verifyJWT);
 app.use('/employees', require('./routes/api/employees'));
 app.use('/users', require('./routes/api/users'));
+
 
 app.all('*', (req, res) => {
     res.status(404);
