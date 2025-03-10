@@ -1,0 +1,195 @@
+body{
+    margin:0px;
+    font-family: sans-serif;
+    background-color: beige;
+}
+nav{
+    display: flex;
+    background-color: blue;
+    width: 100%;
+    justify-content: space-between;
+    position: fixed;
+    align-items: center;
+}
+.logo p{
+    font-size: 30px;
+    margin: 20px;
+    color: white;
+}
+.hamburger img{
+    margin-right: 30px;
+}
+.nav-menu{
+    position: absolute;
+    top: 30px;
+    right: -100%;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(201, 198, 198);
+    border-radius: 5px;
+    box-shadow: 1px 1px rgba(201, 198, 198,0.3) ;
+}
+.active{
+    right: 10px;
+}
+
+.nav-menu ul{
+    margin-left: -20px;
+}
+.nav-menu ul li{
+    list-style-type: none;
+    margin: 20px;
+
+}
+.nav-menu ul li a{
+    text-decoration: none;
+    color: white;
+    transition: 1s;
+
+}
+.nav-menu ul li a:hover{
+    margin-left: -5px;
+}
+.section{
+    display: flex;
+    justify-content: space-around;
+}
+.sidebar{
+    position: fixed;
+    background-color: green;
+    height: 100vh;
+    width: 300px;
+    margin-top: 73px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+}
+.sidebar div{
+    text-align: center;
+    padding: 20px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+.heading{
+    background-color: hsl(0, 100%, 40%);
+}
+.sidebar div:hover{
+    background-color: hsl(0, 100%, 40%);
+}
+.add-cash{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+    margin-left: 300px;
+    height: 350px;
+    background-color: snow;
+    box-shadow: 3px 3px rgba(201, 198, 198,0.3);
+    width: 400px;
+    font-weight: bold;
+
+}
+#num-error,#amount-error,#submit-error{
+    margin: 0px;
+    color: hsl(0, 100%, 40%);
+    font-size: 10px;
+}
+.add-cash button{
+    width: 90%;
+    padding: 20px;
+    background-color: green;
+    box-shadow: 3px 3px rgba(201, 198, 198,0.3);
+    font-weight: bold;
+    color: white;
+    border: none;
+}
+.mybal{
+    margin-top: 150px;
+    height: 100px;
+    background-color: hsl(240, 85%, 60%);
+    box-shadow: 3px 3px rgba(198, 200, 201, 0.3);
+    width: 200px;
+    text-align: center;
+
+}
+.mybal h3{
+    color: white;
+}
+footer{
+    text-align: center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: green;
+    color: white;
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.add-cash, .mybal, .sidebar div {
+    animation: appear 1s ease-in-out;
+}
+
+@media (max-width: 768px) {
+    .section{
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+    .sidebar{
+        display: none;
+        margin-top: 100px;
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    .add-cash{
+        margin-left: 0;
+        width: 90%;
+        margin-top: 100px;
+    }
+    .mybal{
+        width: 90%;
+        margin-top: 20px;
+    }
+    .nav-menu{
+        width: 100px;
+        display: none;
+        background-color: rgb(201, 198, 198);
+        padding: 20px;
+        margin-top: 50px;
+        
+    }
+    .active{
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 1000;
+
+    }
+    .nav-menu ul{
+        width: 100%;
+        text-align: center;
+        padding: 0;
+    }
+    .nav-menu ul li{
+        margin: 10px 0;
+        list-style-type: none;
+    }
+    .hamburger img{
+        margin-right: 10px;
+    }
+}

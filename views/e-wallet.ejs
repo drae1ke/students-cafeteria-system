@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-wallet</title>
+    <link rel="stylesheet" href="css/e-wallet.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <p>JKUAT STUDENT'S MESS</p>
+        </div>
+        <div class="hamburger" id="hamburger">
+            <img onclick="toggleMenu()" src="images/bars-solid.svg" alt="harmburger menu" height="40px">
+        </div>
+        <div class="nav-menu" id="nav-menu">
+            <ul>
+               <li><a href="menu.html">Menu</a></li> 
+               <li><a href="profile.html">Profile</a></li> 
+               <li><a href="about">About</a></li> 
+               <li><a href="index.html">Logout</a></li> 
+            </ul>
+ 
+        </div>
+    </nav>
+
+    <section>
+        <div class="section">
+        <div class="sidebar">
+            <div class="heading">Today's Menu</div>
+            <div>Rice & Beans</div>
+            <div>Veggi & Cabbage</div>
+            <div>Ugali & Sukuma</div>
+            <div>Chapo & Lentils</div>
+            <div>Coffee</div>
+            <div>Africana</div>
+        </div>
+        <div class="add-cash">
+            <h3>E-WALLET</h3>
+            <label for="number">Mpesa Number</label><br>
+            <input type="tel"  name="number" id="number" onkeyup="validateNumber()"  ><p id="num-error"></p><br>
+            <label for="amount">Amount</label><br>
+            <input type="text" name="amount" id="amount" placeholder="as from 10ksh" onkeyup="validateAmount()"><p id="amount-error"></p><br>
+            <button class="submit-btn">Deposit</button>
+            <p id="submit-error"></p>
+        </div>
+        <!-- Updated balance section in HTML -->
+<div class="mybal">
+    <h3>BALANCE:</h3>
+    <h4>KES: <span id="balance-amount">0.00</span></h4>
+</div>
+    </div>
+    </section>
+
+    <footer>
+        Jkuat @ 2024 mess
+    </footer>
+
+   
+    <script src="./scripts/e-waalet.js"></script>
+</body>
+</html>

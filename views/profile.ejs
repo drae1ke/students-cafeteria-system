@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile interface</title>
+    <link rel="stylesheet" href="css/Profile.css">
+   <link rel="shortcut icon" href="images/favicon.png">
+</head>
+
+
+<body>
+   
+
+    <div class="profile-container">
+        <h1>Personal Details</h1>
+        <!-- Circular Profile Update Button -->
+        <div class="update-circle">🔄</div>  
+
+        <!-- Profile Section -->
+        <div class="profile-header">
+            <div class="profile-pic">
+                <img src="images/jkuat mess.png" alt="Profile">
+                <label for="profile-upload" class="edit-icon"></label>
+                <input type="file" id="profile-upload" accept="image/*">
+            </div>
+            <h2>Juliet Migwi</h2>
+       
+
+        <!-- Balance, Orders, Total Spent -->
+        <div class="stats-container">
+            <button class="stat-box">Balance: <span>00.00</span></button>
+            <button class="stat-box">Orders: <span>10</span></button>
+            <button class="stat-box">Total Spent: <span>000.0</span></button>
+        </div>
+
+        <!-- Tabs for Personal Info & Change Password -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="openTab('personal')">Personal Information</button>
+            <button class="tab-btn" onclick="openTab('password')">Change Password</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="personal">
+            <h3>Personal Information</h3>
+            <label>Full Name</label>
+            <input type="text" value="Juliet Migwi" readonly>
+            <label>Registration Number</label>
+            <input type="text" value="HDB212-0261/2020" readonly>
+            <label>Card Number</label>
+            <input type="text" value="1234-5678-9101" readonly>
+           
+        </div>
+
+        <div class="tab-content hidden" id="password">
+            <h3>Change Password</h3>
+            <label>Current Password</label>
+            <input type="password">
+            <label>New Password</label>
+            <input type="password">
+            <label>Confirm Password</label>
+            <input type="password">
+            <button class="update-btn">Update Password</button>
+        </div>
+        <h5>LOGOUT</h5>
+    </div>
+
+  <script src="scripts/profile.js"></script>
+</body>
+</html>

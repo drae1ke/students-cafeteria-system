@@ -1,0 +1,272 @@
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        /* Header and Navigation */
+        .header {
+            background-color: blue;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 300;
+        }
+        .logo img{
+            color: #ffffff;
+        }
+
+       
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            top: 70px;
+            background-color: rgb(28, 28, 118);
+            color: white;
+            width: 250px;
+            padding: 10px;
+            transition: 0.3s;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-menu a {
+            display: block;
+            padding: 15px;
+            color: green;
+            opacity: 1;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .nav-menu a:hover {
+            color: white;
+            padding-left: 5px;
+            font-weight: bold;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background:url('../img/pexels-ella-olsson-572949-1640772.jpg') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: hsl(0, 2%, 92%);;
+            margin-top: 70px;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: rgb(224, 224, 224);
+            animation: left-appear linear 1.5s;
+        }
+        
+        @keyframes left-appear {
+            from{
+                margin-left: -100%;
+            }
+            to{
+                margin-left: 0;
+            }
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+           color: blue;
+        }
+
+        .cta-button {
+            padding: 1rem 2rem;
+            background-color: rgb(28, 28, 118);
+            color: white;
+            border: none;
+            font-weight: bold;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.1s, color 0.1s;
+        }
+        .cta-button a{
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .cta-button:hover {
+            background-color: hsl(240, 63%, 22%);
+            color:white;
+        }
+        
+
+        /* Services Section */
+        .services {
+            padding: 5rem 2rem;
+            text-align: center;
+            
+        }
+
+        .services h2 {
+            color: rgb(28, 28, 118);
+            margin-bottom: 3rem;
+            font-family: cursive;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300, 1fr));
+            gap: 2rem;
+        }
+
+       .service-card {
+    background: hsl(153, 66%, 61%);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    animation: appear 1s linear;
+    transition: transform 0.3s ease-in-out;
+}
+
+@keyframes appear {
+    from {
+        opacity: 0.9;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+        .hairplaiting{
+            object-position: center;
+            object-fit: cover;
+        }
+        .form{
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation:  appear 1s ease-in-out;
+        }
+        .form h2{
+            margin-bottom: 20px;
+            color: rgb(28, 28, 118);
+        }
+    .form h3{
+        margin: 30px;
+        color: rgb(28, 28, 118);
+    }
+        form input{
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form textarea{
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            animation:  appear 1s ease-in-out;
+        }
+        form button{
+            padding: 10px 20px;
+            border: none;
+            background-color: rgb(28, 28, 118);
+            color: white;
+            font-weight: 500px;
+            border-radius: 5px;
+            cursor: pointer;
+            animation:  appear 1s ease-in-out;
+        }
+        form button:hover{
+            background: gradient( #000046, #1cb5e0);
+            color: white;
+        }
+        .form input:focus, .form textarea:focus{
+            outline: none;
+            border: 1px solid rgb(28, 28, 118);
+        }
+        .form input::placeholder, .form textarea::placeholder{
+            color: #ccc;
+        }
+        .image-container{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+        }
+        .text-container{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+        }
+       
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            .nav-menu{
+                width: 100%;
+                background-color: transparent;
+                color: white;
+            }
+            .logo{
+                font-size: 16px;
+            
+            }
+            .header{
+                display: flex;
+                justify-content: space-evenly;
+            }
+            .nav-container img{
+                width: 50px;
+                margin-left: 0px;
+                display: none;
+            }
+        }
+    
