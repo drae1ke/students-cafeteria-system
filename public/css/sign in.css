@@ -148,6 +148,20 @@ button[type="submit"]:hover {
   background: #0056b3;
 }
 
+/* Form Footer */
+.form-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.form-footer a {
+  color: #007bff;
+  text-decoration: none;
+}
+.form-footer a:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* Footer */
 footer {
   text-align: center;
