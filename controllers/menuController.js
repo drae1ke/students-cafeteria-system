@@ -1,7 +1,7 @@
 
 const MenuItem = require('../model/meal');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2; // Assuming you're using Cloudinary
+const cloudinary = require('cloudinary').v2;
 
 // Configure Cloudinary (add to your env variables)
 cloudinary.config({
@@ -40,27 +40,30 @@ const addMenuItem = async (req, res) => {
     }
 
     // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload_stream({
-      resource_type: 'auto',
-      folder: 'menu-items'
-    }).end(req.file.buffer);
-
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: 'menu-items' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(req.file.buffer);
+    });
     // Create new menu item
-    const newItem = new MenuItem({
-      name: req.body.name,
-      description: req.body.description,
-      price: parseFloat(req.body.price),
-      category: req.body.category,
-      availability: req.body.availability === 'on',
-      image: result.secure_url,
-      nutritionalInfo: {
-        calories: req.body.nutritionalInfo?.calories || null,
-        allergens: req.body.nutritionalInfo?.allergens?.split(',') || []
-      }
+    const newItem = await MenuItem.create({
+        name,
+        description,
+        price: parseFloat(price),
+        category,
+        availability: true,
+        image: result.secure_url,
     });
 
-    // Save to database
-    await newItem.save();
+
+    console.log(newItem);
+
+
 
     req.flash('success', 'Menu item added successfully');
     res.redirect('/add');
