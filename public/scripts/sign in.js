@@ -132,3 +132,8 @@ document.getElementById('confirm-password').addEventListener('input', (e) => {
   const pwd = document.getElementById('signup-password').value;
   showError('confirm-password', e.target.value === pwd ? '' : 'Passwords do not match');
 });
+
+function hideError() {
+   const alert = document.querySelector('.alert-danger');
+    alert.style.display = 'none';
+}
