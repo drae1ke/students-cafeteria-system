@@ -1,6 +1,12 @@
 import { cartItems } from "./cart.js";
-import { getProduct } from "../model/menu0ptions.js"; // Fixed typo in filename
-
+ function getProduct(id){
+    for (const item of menuItems){
+        if(item.id === id){
+            return item;
+        }
+    }
+    return null;
+ }
 export function updatePaymentSummary() {
     const itemCount = cartItems.length;
     let subsidyRate = 0.10;

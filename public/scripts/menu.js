@@ -1,5 +1,5 @@
 // menu.js
-import { cartItems, addToCart, updateCartDisplay } from "./cart.js";
+import { cartItems, addToCart, updateCartDisplay } from './cart.js';
 
 // Changed from require() to fetch API call
 async function initMenu() {
@@ -38,8 +38,8 @@ function renderMenuItems(menuItems) {
       <h3>${item.name}</h3>
       ${item.description ? `<p>${item.description}</p>` : ''}
       <div class="availability">
-        <div class="availability-dot ${item.availability}"></div>
-        ${item.availability.charAt(0).toUpperCase() + item.availability.slice(1)}
+        <div class="availability-dot ${item.availability ? 'available' : 'unavailable'}"></div>
+        ${item.availability ? 'Available' : 'Unavailable'}
       </div>
       <p>Price: KES ${(item.price / 100).toFixed(2)}</p>
       <button class="add-to-cart" data-product-id="${item.id}">
@@ -74,7 +74,7 @@ async function refreshToken() {
     const { accessToken } = await response.json();
     localStorage.setItem('accessToken', accessToken);
   } catch (error) {
-    window.location.href = '/login';
+    window.location.href = '/signin';
   }
 }
 

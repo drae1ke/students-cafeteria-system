@@ -1,10 +1,10 @@
 // checkout.js
-import { cartItems, removeFromCart, updateCartDisplay } from "./cart.js";
-import { menuItems } from "../model/menu0ptions.js";
-import { updatePaymentSummary } from "./paymentSummary.js";
+const { cartItems, removeFromCart, updateCartDisplay } = require("./cart");
+const { menuItems } = require("../../model/menuOptions");
+const { updatePaymentSummary } = require("./paymentSummary");
 
 
-export function generateCartHtml() {
+const generateCartHtml=()=> {
     const orderSummary = document.querySelector('.order-summary');
     if (!orderSummary) return;
 

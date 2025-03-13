@@ -74,4 +74,24 @@ const addMenuItem = async (req, res) => {
   }
 };
 
-module.exports = {upload,addMenuItem};
+// Update getMenuItems function
+const getMenuItems = async (req, res) => {
+  try {
+    const menuItems = await MenuItem.find({});
+    res.json(menuItems.map(item => ({
+      _id: item._id,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      category: item.category,
+      availability: item.availability,
+      image: item.image,
+      nutritionalInfo: item.nutritionalInfo
+    })));
+  } catch (error) {
+    console.error('Error fetching menu items:', error);
+    res.status(500).json({ error: 'Failed to load menu' });
+  }
+};
+
+module.exports = {upload,addMenuItem,getMenuItems};

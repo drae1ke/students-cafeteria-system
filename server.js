@@ -50,7 +50,7 @@ app.use('/logout', require('./routes/logout'));
 //app.use('/password', require('./routes/password'));
 
 
-app.use('/menuroute', require('./routes/api/menuroute'));
+app.use('/api', require('./routes/api/menuroute'));
 app.use(verifyJWT);
 app.use('/employees', require('./routes/api/employees'));
 app.use('/users', require('./routes/api/users'));
