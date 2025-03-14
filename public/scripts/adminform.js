@@ -1,88 +1,75 @@
 function switchForm(formType) {
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    
-    if (formType === 'login') {
-        loginForm.classList.remove('hidden');
-        signupForm.classList.add('hidden');
-    } else {
-        signupForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
-    }
+    document.getElementById('loginForm').classList.toggle('hidden', formType !== 'login');
+    document.getElementById('signupForm').classList.toggle('hidden', formType === 'login');
 }
 
-// Login Form Validation
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    let isValid = true;
-    
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    // Email validation
-    if (!validateEmail(email)) {
-        document.getElementById('loginEmailError').style.display = 'block';
-        isValid = false;
-    } else {
-        document.getElementById('loginEmailError').style.display = 'none';
-    }
-    
-    // Password validation
-    if (password.trim() === '') {
-        document.getElementById('loginPasswordError').style.display = 'block';
-        isValid = false;
-    } else {
-        document.getElementById('loginPasswordError').style.display = 'none';
-    }
-    
-    if (isValid) {
-        // Submit form (replace with actual login logic)
-        alert('Login successful!');
-        this.reset();
+
+    const errorDisplay = document.getElementById('loginGeneralError');
+    const emailError = document.getElementById('loginEmailError');
+    const passwordError = document.getElementById('loginPasswordError');
+
+    // Clear previous errors
+    errorDisplay.textContent = '';
+    emailError.textContent = '';
+    passwordError.textContent = '';
+    try {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        const response = await fetch('/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message);
+        }
+
+        const { token } = await response.json();
+        localStorage.setItem('adminToken', token);
+        window.location.href = '/dashboard';
+    } catch (error) {
+        document.getElementById('loginGeneralError').textContent = error.message;
     }
 });
 
-// Signup Form Validation
-document.getElementById('signupForm').addEventListener('submit', function(e) {
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    let isValid = true;
-    
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    // Email validation
-    if (!validateEmail(email)) {
-        document.getElementById('signupEmailError').style.display = 'block';
-        isValid = false;
-    } else {
-        document.getElementById('signupEmailError').style.display = 'none';
-    }
-    
-    // Password validation
-    if (password.length < 8) {
-        document.getElementById('signupPasswordError').style.display = 'block';
-        isValid = false;
-    } else {
-        document.getElementById('signupPasswordError').style.display = 'none';
-    }
-    
-    // Confirm password validation
-    if (password !== confirmPassword) {
-        document.getElementById('confirmPasswordError').style.display = 'block';
-        isValid = false;
-    } else {
-        document.getElementById('confirmPasswordError').style.display = 'none';
-    }
-    
-    if (isValid) {
-        // Submit form (replace with actual signup logic)
-        alert('Signup successful!');
-        this.reset();
+    const errorDisplay = document.getElementById('loginGeneralError');
+    const emailError = document.getElementById('loginEmailError');
+    const passwordError = document.getElementById('loginPasswordError');
+
+    // Clear previous errors
+    errorDisplay.textContent = '';
+    emailError.textContent = '';
+    passwordError.textContent = '';
+    try {
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            throw new Error('Passwords do not match');
+        }
+
+        const response = await fetch('/admin/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message);
+        }
+
+        alert('Registration successful! Please login.');
+        switchForm('login');
+    } catch (error) {
+        document.getElementById('confirmPasswordError').textContent = error.message;
     }
 });
-
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
