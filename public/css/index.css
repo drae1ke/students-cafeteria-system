@@ -1,5 +1,4 @@
-
-        * {
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -51,8 +50,17 @@
             border-radius: 10px;
         }
 
-        .nav-menu.active {
-            right: 0;
+        .user-type{
+            display: none;
+            color: white;
+        }
+        .user-type :hover{
+     padding-left: 0px;
+        }
+
+        .active {
+            display: block;
+            color: white;
         }
 
         .nav-menu a {
@@ -62,13 +70,14 @@
             opacity: 1;
             font-weight: bold;
             text-decoration: none;
-            transition: 0.3s;
+            transition: 0.1s;
         }
 
         .nav-menu a:hover {
             color: white;
             padding-left: 5px;
             font-weight: bold;
+            cursor: pointer;
         }
 
         /* Hero Section */
@@ -269,4 +278,3 @@
                 display: none;
             }
         }
-    

@@ -20,7 +20,11 @@
                     JKUAT STUDENT'S MESS </a>
            
             <div class="nav-menu" id="navMenu">
-                <a href="/signin">sign in</a>
+                <a class="user-options">sign in</a>
+                <div class="user-type">
+                    <a href='/signin'>student</a>
+                    <a href='/adminform'>admin</a>
+                </div>
             </div>
         </nav>
     </header>
@@ -130,8 +134,17 @@
             Designed by Fus-x</p>
     </footer>
 
-    <script src="https://kit.fontawesome.com/yourcode.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+   
+    <script>
+    const userType = document.querySelector('.user-type');
+    const userOptions = document.querySelector('.user-options');
+
+    userOptions.addEventListener('click', () => {
+        userType.classList.toggle('active');
+    });
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
     
 </body>
 </html>
