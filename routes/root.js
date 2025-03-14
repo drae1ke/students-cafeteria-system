@@ -10,6 +10,10 @@ router.get('/signin', (req, res) => {
     res.render('signin');
 });
 
+router.get('/adminform', (req,res) =>{
+    res.render('adminform')
+});
+
 router.get('/e-wallet',(req,res)=>{
     res.render('e-wallet');
 })

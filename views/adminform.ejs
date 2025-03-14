@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Authentication</title>
+    <link rel="shortcut icon" href="../img/favicon.png">
+    <link rel="stylesheet" href="css/adminform.css">
+
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form">
+            <h2>Admin Login</h2>
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail"  required>
+                <div class="error-message" id="loginEmailError">Please enter a valid email</div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" required>
+                <div class="error-message" id="loginPasswordError">Password is required</div>
+            </div>
+            <button type="submit">Login</button>
+            <div class="switch-form">
+                Don't have an account? <button type="button" onclick="switchForm('signup')">Sign Up</button>
+            </div>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="signupForm" class="auth-form hidden">
+            <h2>Admin Sign Up</h2>
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" required>
+                <div class="error-message" id="signupEmailError">Please enter a valid email</div>
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" required>
+                <div class="error-message" id="signupPasswordError">Password must be at least 8 characters</div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+                <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+            </div>
+            <button type="submit">Sign Up</button>
+            <div class="switch-form">
+                Already have an account? <button type="button" onclick="switchForm('login')">Login</button>
+            </div>
+        </form>
+    </div>
+
+   <script src="../scripts/adminform.js"></script>
+
+   
+
+</body>
+</html>
