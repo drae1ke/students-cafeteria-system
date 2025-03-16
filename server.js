@@ -51,6 +51,7 @@ app.use('/admin', require('./routes/admin'));
 //app.use('/password', require('./routes/password'));
 
 
+app.use('/menuroute', require('./routes/api/menuroute'));
 app.use('/api', require('./routes/api/menuroute'));
 app.use(verifyJWT);
 app.use('/employees', require('./routes/api/employees'));
