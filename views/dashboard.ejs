@@ -1,88 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="css/dashboard.css" />
-  <!-- Chart.js CDN for rendering charts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <!-- Add Chart.js for existing functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="dashboard-container">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-      <h2>Admin Panel</h2>
-      <button onclick="showSection('users')">Users</button>
-      <button onclick="showSection('menu')">Menu</button>
-      <button onclick="showSection('transactions')">Transactions</button>
-      <button onclick="showSection('sales')">Sales Trend</button>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <h1>Dashboard Overview</h1>
-      
-      <!-- Stats Cards -->
-      <div class="stats-container">
-        <div class="stat-card">
-          <h3>Total Users</h3>
-          <p id="total-users">0</p>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">Admin Panel</div>
+            <nav>
+                <ul>
+                    <li><a href="#" onclick="showSection('users')" class="active">Users</a></li>
+                    <li><a href="#" onclick="showSection('menu')">Menu Items</a></li>
+                    <li><a href="#" onclick="showSection('transactions')">Transactions</a></li>
+                    <li><a href="#" onclick="showSection('sales')">Sales Analytics</a></li>
+                    <li><a href="/logout" id="logout-btn">Logout</a></li>
+                </ul>
+            </nav>
         </div>
-        <div class="stat-card">
-          <h3>Today's Sales</h3>
-          <p id="today-sales">$0.00</p>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <div class="user-info">Admin</div>
+            </div>
+
+            <!-- Flash Messages -->
+            <% if (locals.success && success.length > 0) { %>
+                <div class="alert alert-success">
+                    <%= success %>
+                </div>
+            <% } %>
+            
+            <% if (locals.error && error.length > 0) { %>
+                <div class="alert alert-danger">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <!-- Users Section -->
+            <div id="users-section" class="content-section">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="userSearchInput" placeholder="Search users...">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="users-table" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Registration Number</th>
+                                <th>Roles</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (locals.users && users.length > 0) { %>
+                                <% users.forEach(user => { %>
+                                    <tr data-id="<%= user._id %>">
+                                        <td><%= user.username %></td>
+                                        <td><%= user.email %></td>
+                                        <td><%= user.regno %></td>
+                                        <td>
+                                            <% 
+                                            let roles = [];
+                                            if (user.roles.User) roles.push('User');
+                                            if (user.roles.Editor) roles.push('Editor');
+                                            if (user.roles.Admin) roles.push('Admin');
+                                            %>
+                                            <%= roles.join(', ') %>
+                                        </td>
+                                        <td class="actions">
+                                            <button class="edit-btn" onclick="editUser('<%= user._id %>')">Edit</button>
+                                            <button class="delete-btn" onclick="deleteUser('<%= user._id %>')">Delete</button>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="no-data">No users found</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Other existing sections -->
+            <div id="menu-section" class="content-section" style="display: none;">
+                <!-- Menu content from existing dashboard -->
+            </div>
+
+            <div id="transactions-section" class="content-section" style="display: none;">
+                <!-- Transactions content from existing dashboard -->
+            </div>
+
+            <div id="sales-section" class="content-section" style="display: none;">
+                <!-- Sales analytics content from existing dashboard -->
+            </div>
         </div>
-      </div>
-
-      <!-- Users Table -->
-      <section id="users-section" class="content-section">
-        <h2>User Management</h2>
-        <table class="data-table" id="users-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-
-      <!-- Menu Table -->
-      <section id="menu-section" class="content-section" style="display: none;">
-        <h2>Menu Management</h2>
-        <table class="data-table" id="menu-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Item</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-
-      <!-- Transactions Section (Placeholder) -->
-      <section id="transactions-section" class="content-section" style="display: none;">
-        <h2>Transactions</h2>
-        <p>Transactions data goes here...</p>
-      </section>
-
-      <!-- Sales Trend Chart Section -->
-      <section id="sales-section" class="content-section" style="display: none;">
-        <h2>Sales Trend Over Time</h2>
-        <canvas id="salesChart" width="400" height="200"></canvas>
-      </section>
     </div>
-  </div>
-  
-  <script src="../scripts/dashboard.js"></script>
+/*
+    <!-- User edit modal -->
+    <div id="userEditModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit User</h2>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUsername">Username</label>
+                    <input type="text" id="editUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRegno">Registration Number</label>
+                    <input type="text" id="editRegno" required>
+                </div>
+                <div class="form-group">
+                    <label>Roles</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="roleUser"> User</label>
+                        <label><input type="checkbox" id="roleEditor"> Editor</label>
+                        <label><input type="checkbox" id="roleAdmin"> Admin</label>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="save-btn">Save Changes</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    */
+
+    <!-- Add a modified version of the dashboard.js with user management functionality -->
+    <script src="../scripts/dashboard.js"></script>
 </body>
 </html>

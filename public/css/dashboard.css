@@ -23,8 +23,9 @@
     padding: 20px;
     color: white;
   }
+
   
-  .sidebar button {
+  .sidebar a {
     display: block;
     width: 100%;
     padding: 12px;
@@ -35,10 +36,15 @@
     cursor: pointer;
     border-radius: 4px;
     transition: background 0.3s;
+    text-decoration: none;
+    font-size: 16px;
   }
   
-  .sidebar button:hover {
+  .sidebar a:hover {
     background: #283593;
+  }
+  .sidebar ul {
+    list-style: none;
   }
   
   /* Main Content */

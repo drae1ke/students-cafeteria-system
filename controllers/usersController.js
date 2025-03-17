@@ -25,8 +25,39 @@ const getUser = async (req, res) => {
     res.json(user);
 }
 
+// New update function
+const updateUser = async (req, res) => {
+    if (!req?.params?.id) {
+        return res.status(400).json({ "message": 'User ID required' });
+    }
+
+    try {
+        const user = await User.findOne({ _id: req.params.id }).exec();
+        if (!user) {
+            return res.status(204).json({ 'message': `User ID ${req.params.id} not found` });
+        }
+
+        // Update user fields if provided
+        if (req.body.username) user.username = req.body.username;
+        if (req.body.email) user.email = req.body.email;
+        if (req.body.regno) user.regno = req.body.regno;
+        
+        // Update roles if provided
+        if (req.body.roles) {
+            user.roles = req.body.roles;
+        }
+
+        const result = await user.save();
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ 'message': 'Server error during update' });
+    }
+}
+
 module.exports = {
     getAllUsers,
     deleteUser,
-    getUser
+    getUser,
+    updateUser
 }

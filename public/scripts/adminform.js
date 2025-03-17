@@ -64,6 +64,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         
         const { token } = data;
         localStorage.setItem('adminToken', token);
+        // Keep this as /dashboard since that's your actual frontend path
         window.location.href = '/dashboard';
     } catch (error) {
         if (error.message !== 'Validation failed' && error.message !== 'API error') {
@@ -157,5 +158,41 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
         // Reset button state
         signupButton.disabled = false;
         signupButton.textContent = 'Sign Up';
+    }
+});
+
+// Update the addAuthorizationHeader function
+function addAuthorizationHeader(headers = {}) {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+        return {
+            ...headers,
+            'Authorization': `Bearer ${token}` // Make sure the format matches exactly
+        };
+    }
+    return headers;
+}
+
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname === '/dashboard') {
+        fetch('/admin/dashboard', {
+            method: 'GET',
+            headers: addAuthorizationHeader(),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                }
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.location.href = '/admin/login';
+        });
     }
 });

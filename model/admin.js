@@ -24,7 +24,8 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
     minlength: [8, 'Password must be at least 8 characters']
-  }
+  },
+  refreshToken: String
 }, { timestamps: true });
 
 // Hash password before saving
