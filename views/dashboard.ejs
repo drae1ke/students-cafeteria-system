@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="shortcut icon" href="../img/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Add Chart.js for existing functionality -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -15,11 +17,12 @@
             <div class="logo">Admin Panel</div>
             <nav>
                 <ul>
-                    <li><a href="#" onclick="showSection('users')" class="active">Users</a></li>
-                    <li><a href="#" onclick="showSection('menu')">Menu Items</a></li>
-                    <li><a href="#" onclick="showSection('transactions')">Transactions</a></li>
-                    <li><a href="#" onclick="showSection('sales')">Sales Analytics</a></li>
-                    <li><a href="/logout" id="logout-btn">Logout</a></li>
+                    <li><a href="#" onclick="showSection('users')" class="active"><i class="fas fa-users"></i> Users</a></li>
+                    <li><a href="#" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Menu Items</a></li>
+                    <li><a href="#" onclick="showSection('transactions')"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                    <li><a href="#" onclick="showSection('sales')"><i class="fas fa-chart-line"></i> Sales Analytics</a></li>
+                    <li><a href="#" onclick="showSection('Orders')"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                    <li><a href="/logout" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
         </div>
