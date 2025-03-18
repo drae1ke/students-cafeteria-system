@@ -137,3 +137,36 @@ function hideError() {
    const alert = document.querySelector('.alert-danger');
     alert.style.display = 'none';
 }
+
+// Add this to your existing login form submit handler
+document.getElementById('login-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    const formData = {
+        regno: document.getElementById('login-regno').value,
+        pwd: document.getElementById('login-password').value
+    };
+
+    try {
+        const response = await fetch('/auth', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Store the access token
+            localStorage.setItem('accessToken', data.accessToken);
+            window.location.href = data.redirect;
+        } else {
+            showError('login-regno', data.message || 'Login failed');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showError('login-regno', 'An error occurred during login');
+    }
+});

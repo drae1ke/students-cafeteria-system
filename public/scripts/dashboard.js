@@ -3,6 +3,68 @@
 // --------- User Management Functions ---------
 
 /**
+ * Fetches and displays all users in the table
+ */
+const loadUsers = () => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+        window.location.href = '/adminform';
+        return;
+    }
+
+    fetch('/users', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch users');
+        return response.json();
+    })
+    .then(users => {
+        const tbody = document.querySelector('#users-table tbody');
+        if (!tbody) {
+            console.error('Users table not found in the DOM');
+            return;
+        }
+        
+        tbody.innerHTML = ''; // Clear existing rows
+        
+        users.forEach(user => {
+            const roleNames = [];
+            if (user.roles.User) roleNames.push('User');
+            if (user.roles.Editor) roleNames.push('Editor');
+            if (user.roles.Admin) roleNames.push('Admin');
+            
+            const row = `
+                <tr data-id="${user._id}">
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>${user.regno}</td>
+                    <td>${roleNames.join(', ')}</td>
+                    <td>
+                        <button onclick="editUser('${user._id}')">Edit</button>
+                        <button onclick="deleteUser('${user._id}')">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+
+        // Update the total users count
+        document.getElementById('total-users').textContent = users.length;
+    })
+    .catch(error => {
+        console.error('Error loading users:', error);
+        if (error.message === 'Failed to fetch users') {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/adminform';
+        }
+        alert('Failed to load users. Please try again.');
+    });
+};
+
+/**
  * Search functionality for the users table
  */
 const setupUserSearch = () => {
@@ -22,10 +84,8 @@ const setupUserSearch = () => {
 
 /**
  * Opens the edit user modal and populates it with the selected user's data
- * @param {string} userId - The ID of the user to edit
  */
 function editUser(userId) {
-    // Get the user data from the table row
     const row = document.querySelector(`tr[data-id="${userId}"]`);
     if (!row) return;
     
@@ -49,26 +109,25 @@ function editUser(userId) {
     // Show the modal
     const modal = document.getElementById('userEditModal');
     modal.style.display = 'flex';
+    
+    // Scroll to the modal
+    modal.scrollIntoView({ behavior: 'smooth' });
 }
 
 /**
  * Deletes a user after confirmation
- * @param {string} userId - The ID of the user to delete
  */
 function deleteUser(userId) {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
         return;
     }
     
-    // Get the admin token from localStorage
     const token = localStorage.getItem('adminToken');
     if (!token) {
-        alert('You must be logged in to perform this action');
         window.location.href = '/adminform';
         return;
     }
     
-    // Send delete request
     fetch(`/users`, {
         method: 'DELETE',
         headers: {
@@ -79,11 +138,8 @@ function deleteUser(userId) {
     })
     .then(response => {
         if (response.ok) {
-            // Remove the row from the table
             const row = document.querySelector(`tr[data-id="${userId}"]`);
             if (row) row.remove();
-            
-            // Show success message
             alert('User deleted successfully');
         } else {
             throw new Error('Failed to delete user');
@@ -115,15 +171,12 @@ const setupEditUserForm = () => {
             if (document.getElementById('roleEditor').checked) roles.Editor = 1984;
             if (document.getElementById('roleAdmin').checked) roles.Admin = 5150;
             
-            // Get the admin token from localStorage
             const token = localStorage.getItem('adminToken');
             if (!token) {
-                alert('You must be logged in to perform this action');
                 window.location.href = '/adminform';
                 return;
             }
             
-            // Send update request (this endpoint would need to be created)
             fetch(`/users/${userId}`, {
                 method: 'PATCH',
                 headers: {
@@ -133,19 +186,12 @@ const setupEditUserForm = () => {
                 body: JSON.stringify({ username, email, regno, roles })
             })
             .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
+                if (response.ok) return response.json();
                 throw new Error('Failed to update user');
             })
             .then(data => {
-                // Update the row in the table
                 updateUserRow(userId, { username, email, regno, roles });
-                
-                // Close the modal
                 document.getElementById('userEditModal').style.display = 'none';
-                
-                // Show success message
                 alert('User updated successfully');
             })
             .catch(error => {
@@ -158,8 +204,6 @@ const setupEditUserForm = () => {
 
 /**
  * Updates a user row in the table with new data
- * @param {string} userId - The ID of the user to update
- * @param {Object} userData - The updated user data
  */
 function updateUserRow(userId, userData) {
     const row = document.querySelector(`tr[data-id="${userId}"]`);
@@ -170,7 +214,6 @@ function updateUserRow(userId, userData) {
     cells[1].textContent = userData.email;
     cells[2].textContent = userData.regno;
     
-    // Update roles display
     const roleNames = [];
     if (userData.roles.User) roleNames.push('User');
     if (userData.roles.Editor) roleNames.push('Editor');
@@ -185,77 +228,42 @@ const setupModalClose = () => {
     const modals = document.querySelectorAll('.modal');
     const closeButtons = document.querySelectorAll('.close, .cancel-btn');
     
-    // Close when clicking the close button
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
-            modals.forEach(modal => {
-                modal.style.display = 'none';
-            });
+            modals.forEach(modal => modal.style.display = 'none');
         });
     });
     
-    // Close when clicking outside the modal
     window.addEventListener('click', (event) => {
         modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
+            if (event.target === modal) modal.style.display = 'none';
         });
-    });
-};
-
-/**
- * Verify the admin token on page load and redirect if invalid
- */
-const checkAdminAuth = () => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-        window.location.href = '/adminform';
-        return;
-    }
-    
-    // Optional: Verify token is valid
-    fetch('/admin/verify-token', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Invalid token');
-        }
-    })
-    .catch(() => {
-        // Token invalid, redirect to login
-        localStorage.removeItem('adminToken');
-        window.location.href = '/adminform';
     });
 };
 
 /**
  * Display the selected section and hide others
- * @param {string} section - The section to display
  */
 const showSection = (section) => {
-    // Update active link
     document.querySelectorAll('.sidebar nav a').forEach(link => {
         link.classList.remove('active');
     });
     document.querySelector(`.sidebar nav a[onclick="showSection('${section}')"]`).classList.add('active');
     
-    // Hide all sections
     document.querySelectorAll('.content-section').forEach(sec => {
         sec.style.display = 'none';
     });
     
-    // Show selected section
     document.getElementById(`${section}-section`).style.display = 'block';
 };
 
-/**
- * Set up logout functionality
- */
-const setupLogout = () => {
+// Initialize all functions when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setupUserSearch();
+    setupEditUserForm();
+    setupModalClose();
+    
+    // Set up logout
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
@@ -264,19 +272,7 @@ const setupLogout = () => {
             window.location.href = '/adminform';
         });
     }
-};
-
-// Initialize all functions when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    checkAdminAuth();
-    setupUserSearch();
-    setupEditUserForm();
-    setupModalClose();
-    setupLogout();
     
-    // Show users section by default
     showSection('users');
-
-    // Bring existing functionality from dashboard.js if needed
-    // initDashboard();
+    loadUsers(); // This now includes auth check
 });

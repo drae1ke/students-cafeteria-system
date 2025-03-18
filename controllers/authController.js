@@ -43,6 +43,7 @@ const handleLogin = async (req, res) => {
         foundUser.refreshToken = refreshToken;
         await foundUser.save();
 
+        // Store the access token in localStorage after successful login
         res.cookie('jwt', refreshToken, { 
             httpOnly: true, 
             secure: true, 
@@ -50,8 +51,12 @@ const handleLogin = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 
         });
 
-        req.flash('success', 'Login successful!');
-        res.redirect('e-wallet'); // Redirect to e-wallet route
+        // Send accessToken in the response
+        res.json({ 
+            success: true, 
+            accessToken: accessToken,
+            redirect: '/e-wallet'
+        });
 
     } catch (err) {
         req.flash('error', 'An error occurred during login');

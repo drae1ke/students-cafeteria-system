@@ -30,6 +30,17 @@
                 <h1>Dashboard</h1>
                 <div class="user-info">Admin</div>
             </div>
+            <!--stats cards-->
+            <div class="stats-container">
+                <div class="stat-card">
+                  <h3>Total Users</h3>
+                  <p id="total-users">0</p>
+                </div>
+                <div class="stat-card">
+                  <h3>Today's Sales</h3>
+                  <p id="today-sales">$0.00</p>
+                </div>
+              </div>
 
             <!-- Flash Messages -->
             <% if (locals.success && success.length > 0) { %>
@@ -110,7 +121,7 @@
             </div>
         </div>
     </div>
-/*
+
     <!-- User edit modal -->
     <div id="userEditModal" class="modal">
         <div class="modal-content">
@@ -145,7 +156,7 @@
             </form>
         </div>
     </div>
-    */
+
 
     <!-- Add a modified version of the dashboard.js with user management functionality -->
     <script src="../scripts/dashboard.js"></script>
