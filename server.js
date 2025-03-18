@@ -48,8 +48,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 app.use('/admin', require('./routes/admin'));
-app.use('/menuroute', require('./routes/api/menuroute'));
-app.use('/api', require('./routes/api/menuroute'));
+app.use('/', require('./routes/api/menuroute'));
 
 // Apply verifyJWT middleware BEFORE protected routes
 app.use(verifyJWT);

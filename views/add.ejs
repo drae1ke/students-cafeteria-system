@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Menu Item</title>
-    <link rel="stylesheet" href="css/add.css">
+    <title>Menu Item Management</title>
+    <link rel="stylesheet" href="/css/add.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="form-container">
             <h2 class="form-header">Add New Menu Item</h2>
-            <form action="/menuroute" method="POST" enctype="multipart/form-data">
+            
+            <!-- Flash Messages -->
+            <div id="notifications"></div>
+            
+            <form id="menuItemForm" action="/api/menu" method="POST" enctype="multipart/form-data">
                 <div class="row g-3">
                     <!-- Left Column -->
                     <div class="col-md-6">
-                        <!-- Name -->
                         <div class="mb-3">
                             <label for="name" class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
 
-                        <!-- Category -->
                         <div class="mb-3">
                             <label for="category" class="form-label">Category</label>
                             <select class="form-select" id="category" name="category" required>
@@ -34,7 +36,6 @@
                             </select>
                         </div>
 
-                        <!-- Price -->
                         <div class="mb-3">
                             <label for="price" class="form-label">Price</label>
                             <div class="input-group">
@@ -44,7 +45,6 @@
                             </div>
                         </div>
 
-                        <!-- Availability -->
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="availability" 
                                   name="availability" checked>
@@ -54,13 +54,15 @@
 
                     <!-- Right Column -->
                     <div class="col-md-6">
-                        <!-- Image Upload -->
                         <div class="mb-3">
                             <label for="image" class="form-label">Item Image</label>
-                            <input class="form-control" type="file" id="image" name="image" accept="image/*" required>
+                            <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                            <div id="currentImage" class="mt-2" style="display: none;">
+                                <img id="previewImage" src="" alt="Current item image" style="max-width: 200px; max-height: 200px;">
+                                <p class="text-muted">Current image will be kept if no new image is selected</p>
+                            </div>
                         </div>
 
-                        <!-- Nutritional Information -->
                         <div class="mb-3">
                             <label class="form-label">Nutritional Information</label>
                             <div class="row g-2">
@@ -78,7 +80,6 @@
                         </div>
                     </div>
 
-                    <!-- Description -->
                     <div class="col-12">
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
@@ -87,9 +88,11 @@
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary w-100">Add Menu Item</button>
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">Add Menu Item</button>
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -97,6 +100,111 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('menuItemForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit');
+        
+        // Show notification function
+        const showNotification = (message, type) => {
+            const notificationDiv = document.getElementById('notifications');
+            notificationDiv.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 3000);
+        };
 
+        // If we're in edit mode
+        if (editId) {
+            document.querySelector('.form-header').textContent = 'Edit Menu Item';
+            submitBtn.textContent = 'Update Menu Item';
+            form.action = `/api/menu/${editId}`;
+            
+            // Make image upload optional in edit mode
+            document.getElementById('image').removeAttribute('required');
+            
+            // Fetch existing item data
+            const token = localStorage.getItem('adminToken');
+            fetch(`/api/menu/${editId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch menu item');
+                return response.json();
+            })
+            .then(item => {
+                // Populate form fields
+                document.getElementById('name').value = item.name;
+                document.getElementById('category').value = item.category;
+                document.getElementById('price').value = item.price;
+                document.getElementById('description').value = item.description;
+                document.getElementById('availability').checked = item.availability;
+                
+                if (item.nutritionalInfo) {
+                    document.getElementById('calories').value = item.nutritionalInfo.calories || '';
+                    document.getElementById('allergens').value = item.nutritionalInfo.allergens || '';
+                }
+                
+                // Show current image if it exists
+                if (item.image) {
+                    document.getElementById('currentImage').style.display = 'block';
+                    document.getElementById('previewImage').src = item.image;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to load menu item data', 'danger');
+            });
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const token = localStorage.getItem('adminToken');
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: editId ? 'PATCH' : 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save menu item');
+                }
+
+                const result = await response.json();
+                showNotification(
+                    editId ? 'Menu item updated successfully' : 'Menu item added successfully', 
+                    'success'
+                );
+                
+                // Redirect to dashboard after short delay
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1500);
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to save menu item', 'danger');
+            }
+        });
+    });
+    </script>
 </body>
 </html>

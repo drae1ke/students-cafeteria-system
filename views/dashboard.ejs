@@ -107,11 +107,36 @@
                 </div>
             </div>
 
-            <!-- Other existing sections -->
+            <!-- Menu Section -->
             <div id="menu-section" class="content-section" style="display: none;">
-                <!-- Menu content from existing dashboard -->
+                <div class="section-header">
+                    <h2>Menu Management</h2>
+                    <div class="search-bar">
+                        <input type="text" id="menuSearchInput" placeholder="Search menu items...">
+                    </div>
+                    <button class="add-btn" onclick="window.location.href='/add'">Add New Item</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="menu-table" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Availability</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Menu items will be dynamically populated here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
+            <!-- Other existing sections -->
             <div id="transactions-section" class="content-section" style="display: none;">
                 <!-- Transactions content from existing dashboard -->
             </div>
@@ -160,5 +185,6 @@
 
     <!-- Add a modified version of the dashboard.js with user management functionality -->
     <script src="../scripts/dashboard.js"></script>
+    <script src="../scripts/adminMenu.js"></script>
 </body>
 </html>
