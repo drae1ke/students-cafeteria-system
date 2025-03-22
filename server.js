@@ -16,19 +16,20 @@ const PORT = process.env.PORT || 3500;
 
 app.set('view engine','ejs')
 
-
 // Connect to MongoDB
 connectDB();
 
 // custom middleware logger
 app.use(logger);
 flashMiddleware(app);
+
 // Handle options credentials check - before CORS!
 // and fetch cookies credentials requirement
 app.use(credentials);
 
 // Cross Origin Resource Sharing
 app.use(cors(corsOptions));
+
 // built-in middleware to handle urlencoded form data
 app.use(express.urlencoded({ extended: false }));
 
@@ -49,6 +50,9 @@ app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 app.use('/admin', require('./routes/admin'));
 app.use('/', require('./routes/api/menuroute'));
+
+// Password reset routes (adding these here)
+app.use('/', require('./routes/password'));
 
 // Apply verifyJWT middleware BEFORE protected routes
 app.use(verifyJWT);

@@ -9,6 +9,9 @@ router.get('/', (req, res) => {
 router.get('/signin', (req, res) => {
     res.render('signin');
 });
+router.get('/reset-password', (req, res) => {
+    res.render('reset-password');
+});
 
 router.get('/adminform', (req,res) =>{
     res.render('adminform')

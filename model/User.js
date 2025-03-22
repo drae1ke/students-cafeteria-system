@@ -30,7 +30,10 @@ const userSchema = new Schema({
     eWallets: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'EWallet',
-    }
+    },
+    // Add these fields for password reset functionality
+    passwordResetToken: String,
+    passwordResetExpires: Date
 });
 
 module.exports = mongoose.model('User', userSchema);

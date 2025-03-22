@@ -1,9 +1,12 @@
-// routes/authRoutes.js
+// routes/password.js
 const router = require('express').Router();
-const forgotPassword = require('../controllers/forgotPasswordController');
+const forgotPasswordController = require('../controllers/forgotPasswordController');
 
-router.post('/forgot-password', forgotPassword.forgotPassword);
-router.patch('/reset-password/:token', forgotPassword.resetPassword);
+// API endpoints for password reset
+router.post('/forgot-password', forgotPasswordController.forgotPassword);
+router.patch('/reset-password/:token', forgotPasswordController.resetPassword);
 
+// Page render route (must be added to work with the frontend)
+router.get('/reset-password/:token', forgotPasswordController.getResetPage);
 
 module.exports = router;

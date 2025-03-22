@@ -35,67 +35,6 @@ function togglePassword(fieldId) {
     toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
   }
 }
-// Forgot Password Handler
-async function handleForgotPassword(event) {
-  event.preventDefault();
-  const email = document.getElementById('forgot-email').value;
-
-  if (!validateEmail(email)) {
-    return showError('forgot-email', 'Please enter a valid email address');
-  }
-
-  try {
-    await handleRequest('/forgot-password', 'POST', { email });
-    alert('Password reset link sent to your email');
-    switchForm('login');
-  } catch (error) {
-    showError('forgot-email', error.message);
-  }
-}
-
-// Reset Password Handler
-async function handleResetPassword(event) {
-  event.preventDefault();
-  const password = document.getElementById('reset-password').value;
-  const confirmPassword = document.getElementById('reset-confirm-password').value;
-  const token = new URLSearchParams(window.location.search).get('token');
-
-  if (!token) {
-    return alert('Invalid reset token');
-  }
-
-  if (password !== confirmPassword) {
-    return showError('reset-confirm-password', 'Passwords do not match');
-  }
-
-  if (!validatePassword(password)) {
-    return showError('reset-password', 'Minimum 8 characters required');
-  }
-
-  try {
-    await handleRequest(`/reset-password/${token}`, 'PATCH', { password });
-    alert('Password reset successfully!');
-    window.location.href = '/login';
-  } catch (error) {
-    showError('reset-password', error.message);
-  }
-}
-
-// Update Event Listeners
-document.getElementById('forgot-form').addEventListener('submit', handleForgotPassword);
-document.getElementById('reset-form').addEventListener('submit', handleResetPassword);
-
-// Check for Reset Token on Page Load
-document.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const resetToken = urlParams.get('token');
-  
-  if (resetToken && window.location.pathname === '/reset-password') {
-    switchForm('reset');
-    document.getElementById('reset-form').classList.add('active');
-  }
-});
-
 
 // Form Switching
 function switchForm(formType) {
@@ -107,66 +46,193 @@ function switchForm(formType) {
     tab.classList.remove('active');
   });
   
-  if (formType !== 'forgot') {
-    document.querySelector(`.auth-tab[onclick*="${formType}"]`).classList.add('active');
+  if (formType !== 'forgot' && formType !== 'reset') {
+    const tabSelector = document.querySelector(`.auth-tab[onclick*="${formType}"]`);
+    if (tabSelector) {
+      tabSelector.classList.add('active');
+    }
   }
   
   const targetForm = document.getElementById(`${formType}-form`);
   if (targetForm) targetForm.classList.add('active');
+}
 
-  if (formType === 'reset') {
-    document.getElementById('auth-tabs').style.display = 'none';
+// Forgot Password Handler
+async function handleForgotPassword(event) {
+  event.preventDefault();
+  showLoading(true);
+  
+  const email = document.getElementById('forgot-email').value;
+
+  if (!validateEmail(email)) {
+    showLoading(false);
+    return showError('forgot-email', 'Please enter a valid email address');
+  }
+
+  try {
+    const response = await fetch('/forgot-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+    showLoading(false);
+
+    if (response.ok) {
+      alert('Password reset link sent to your email');
+      switchForm('login');
+    } else {
+      showError('forgot-email', data.message || 'Failed to send reset email');
+    }
+  } catch (error) {
+    showLoading(false);
+    console.error('Forgot password error:', error);
+    showError('forgot-email', 'An error occurred while processing your request');
   }
 }
 
+// Reset Password Handler
+async function handleResetPassword(event) {
+  event.preventDefault();
+  showLoading(true);
+  
+  const password = document.getElementById('reset-password').value;
+  const confirmPassword = document.getElementById('reset-confirm-password').value;
+  
+  // Extract token from URL path
+  const pathSegments = window.location.pathname.split('/');
+  const token = pathSegments[pathSegments.length - 1];
 
-document.getElementById('signup-email').addEventListener('input', (e) => {
-  showError('signup-email', validateEmail(e.target.value) ? '' : 'Invalid email format');
-});
+  if (!token) {
+    showLoading(false);
+    return alert('Invalid reset token');
+  }
 
-document.getElementById('signup-password').addEventListener('input', (e) => {
-  showError('signup-password', validatePassword(e.target.value) ? '' : 'Minimum 8 characters required');
-});
+  if (!validatePassword(password)) {
+    showLoading(false);
+    return showError('reset-password', 'Minimum 8 characters required');
+  }
 
-document.getElementById('confirm-password').addEventListener('input', (e) => {
-  const pwd = document.getElementById('signup-password').value;
-  showError('confirm-password', e.target.value === pwd ? '' : 'Passwords do not match');
+  if (password !== confirmPassword) {
+    showLoading(false);
+    return showError('reset-confirm-password', 'Passwords do not match');
+  }
+
+  try {
+    const response = await fetch(`/reset-password/${token}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await response.json();
+    showLoading(false);
+
+    if (response.ok) {
+      alert('Password reset successfully!');
+      window.location.href = '/login';
+    } else {
+      showError('reset-password', data.message || 'Failed to reset password');
+    }
+  } catch (error) {
+    showLoading(false);
+    console.error('Reset password error:', error);
+    showError('reset-password', 'An error occurred during password reset');
+  }
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Forgot password form
+  const forgotForm = document.getElementById('forgot-form');
+  if (forgotForm) {
+    forgotForm.addEventListener('submit', handleForgotPassword);
+  }
+
+  // Reset password form
+  const resetForm = document.getElementById('reset-form');
+  if (resetForm) {
+    resetForm.addEventListener('submit', handleResetPassword);
+  }
+
+  // Check for reset password path
+  if (window.location.pathname.startsWith('/reset-password/')) {
+    switchForm('reset');
+  }
+
+  // Input validation listeners
+  const signupEmail = document.getElementById('signup-email');
+  if (signupEmail) {
+    signupEmail.addEventListener('input', (e) => {
+      showError('signup-email', validateEmail(e.target.value) ? '' : 'Invalid email format');
+    });
+  }
+
+  const signupPassword = document.getElementById('signup-password');
+  if (signupPassword) {
+    signupPassword.addEventListener('input', (e) => {
+      showError('signup-password', validatePassword(e.target.value) ? '' : 'Minimum 8 characters required');
+    });
+  }
+
+  const confirmPassword = document.getElementById('confirm-password');
+  if (confirmPassword) {
+    confirmPassword.addEventListener('input', (e) => {
+      const pwd = document.getElementById('signup-password').value;
+      showError('confirm-password', e.target.value === pwd ? '' : 'Passwords do not match');
+    });
+  }
 });
 
 function hideError() {
-   const alert = document.querySelector('.alert-danger');
+  const alert = document.querySelector('.alert-danger');
+  if (alert) {
     alert.style.display = 'none';
+  }
 }
 
-// Add this to your existing login form submit handler
-document.getElementById('login-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    
-    const formData = {
+// Login form handler
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showLoading(true);
+      
+      const formData = {
         regno: document.getElementById('login-regno').value,
         pwd: document.getElementById('login-password').value
-    };
+      };
 
-    try {
+      try {
         const response = await fetch('/auth', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
         });
 
         const data = await response.json();
+        showLoading(false);
 
         if (data.success) {
-            // Store the access token
-            localStorage.setItem('accessToken', data.accessToken);
-            window.location.href = data.redirect;
+          // Store the access token
+          localStorage.setItem('accessToken', data.accessToken);
+          window.location.href = data.redirect;
         } else {
-            showError('login-regno', data.message || 'Login failed');
+          showError('login-regno', data.message || 'Login failed');
         }
-    } catch (error) {
+      } catch (error) {
+        showLoading(false);
         console.error('Login error:', error);
         showError('login-regno', 'An error occurred during login');
-    }
+      }
+    });
+  }
 });
