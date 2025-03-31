@@ -50,6 +50,8 @@ app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 app.use('/admin', require('./routes/admin'));
 app.use('/', require('./routes/api/menuroute'));
+app.use('/mpesa', require('./routes/mpesa'));
+
 
 // Password reset routes (adding these here)
 app.use('/', require('./routes/password'));

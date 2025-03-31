@@ -1,4 +1,3 @@
-// Updated JavaScript code
 function validateNumber() {
     const number = document.getElementById('number').value;
     const error = document.getElementById('num-error');
@@ -33,50 +32,63 @@ function validateAmount() {
     }
 }
 
-function addFunds() {
-    const amountInput = document.getElementById('amount');
+async function initiateMpesaPayment() {
+    const number = document.getElementById('number').value;
+    const amount = document.getElementById('amount').value;
     const submitError = document.getElementById('submit-error');
-    const cashAmount = Number(amountInput.value);
-    const currentBalance = Number(localStorage.getItem('balance')) || 0;
 
-    const newBalance = currentBalance + cashAmount;
-    localStorage.setItem('balance', newBalance.toString());
-    updateBalanceDisplay();
-    resetFields();
-    submitError.textContent = "";
-}
-
-function updateBalanceDisplay() {
-    const balanceDisplay = document.getElementById('balance-amount');
-    const currentBalance = Number(localStorage.getItem('balance')) || 0;
-    balanceDisplay.textContent = currentBalance.toFixed(2);
-}
-
-// Initialize balance display on page load
-document.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('balance')) {
-        localStorage.setItem('balance', '0');
+    if (!validateNumber() || !validateAmount()) {
+        submitError.textContent = "Please correct the errors above.";
+        return;
     }
-    updateBalanceDisplay();
-});
 
-// Updated event listener for deposit button
-const submitBtn = document.querySelector('.submit-btn');
- submitBtn.addEventListener('click', (e) => {
+    try {
+        const response = await fetch('http://localhost:3500/mpesa/stkpush', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ phone: number, amount: amount })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("STK Push sent. Please enter your M-Pesa PIN to complete the transaction.");
+            console.log(data); // Log response for debugging
+        } else {
+            submitError.textContent = `Error: ${data.message || "Something went wrong"}`;
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        submitError.textContent = "Failed to connect to the server.";
+    }
+}
+
+// Event listener for deposit button
+document.querySelector('.submit-btn').addEventListener('click', (e) => {
     e.preventDefault();
-    const isNumberValid = validateNumber();
-    const isAmountValid = validateAmount();
-
-    if (isNumberValid && isAmountValid) {
-        addFunds();
-        alert("Deposit initiated. Please input your M-Pesa PIN.");
-    } else {
-        document.getElementById('submit-error').textContent = "Please correct the errors above.";
-    }
+    initiateMpesaPayment();
 });
 
-function toggleMenu (){
-    const navMenu = document.getElementById('nav-menu')
+// Function to fetch and update balance
+async function updateBalanceDisplay() {
+    try {
+        const response = await fetch('http://localhost:3500/user/balance'); // Ensure this endpoint exists
+        const data = await response.json();
 
-    navMenu.classList.toggle('active')
+        if (response.ok) {
+            document.getElementById('balance-amount').textContent = data.balance.toFixed(2);
+        }
+    } catch (error) {
+        console.error("Error fetching balance:", error);
+    }
+}
+
+// Fetch balance on page load
+document.addEventListener('DOMContentLoaded', updateBalanceDisplay);
+
+function toggleMenu() {
+    const navMenu = document.getElementById('nav-menu');
+    navMenu.classList.toggle('active');
 }
