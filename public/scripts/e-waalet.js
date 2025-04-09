@@ -20,7 +20,7 @@ function validateAmount() {
     const amount = document.getElementById('amount').value;
     const cashAmount = Number(amount);
 
-    if (isNaN(cashAmount) || cashAmount < 10) {
+    if (isNaN(cashAmount) || cashAmount < 1) {
         error.innerHTML = "Minimum deposit is Ksh.10";
         return false;
     } else if (cashAmount > 100000) {
