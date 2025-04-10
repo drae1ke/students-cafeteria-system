@@ -21,7 +21,7 @@
                     <li><a href="#" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Menu Items</a></li>
                     <li><a href="#" onclick="showSection('transactions')"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
                     <li><a href="#" onclick="showSection('sales')"><i class="fas fa-chart-line"></i> Sales Analytics</a></li>
-                    <li><a href="#" onclick="showSection('Orders')"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                    <li><a href="#" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> Orders</a></li>
                     <li><a href="/logout" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
@@ -147,6 +147,195 @@
             <div id="sales-section" class="content-section" style="display: none;">
                 <!-- Sales analytics content from existing dashboard -->
             </div>
+               <!-- Orders Section (Add this to your existing dashboard HTML) -->
+<div id="orders-section" class="content-section" style="display: none;">
+    <div class="section-header">
+        <h2>Order Management</h2>
+        <div class="search-bar">
+            <input type="text" id="orderSearchInput" placeholder="Search orders...">
+        </div>
+    </div>
+
+    <div class="filter-controls">
+        <div class="filter-group">
+            <label for="statusFilter">Status:</label>
+            <select id="statusFilter">
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="ready">Ready</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="startDate">From:</label>
+            <input type="date" id="startDate">
+            <label for="endDate">To:</label>
+            <input type="date" id="endDate">
+            <button id="applyDateFilter" class="filter-btn">Apply</button>
+            <button id="resetFilters" class="filter-btn secondary">Reset</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="orders-table" class="data-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Orders will be dynamically populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div id="orders-section" class="content-section" style="display: none;">
+    <div class="section-header">
+        <h2>Order Management</h2>
+        <div class="search-bar">
+            <input type="text" id="orderSearchInput" placeholder="Search orders...">
+        </div>
+    </div>
+
+    <div class="filter-controls">
+        <div class="filter-group">
+            <label for="statusFilter">Status:</label>
+            <select id="statusFilter">
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="ready">Ready</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="startDate">From:</label>
+            <input type="date" id="startDate">
+            <label for="endDate">To:</label>
+            <input type="date" id="endDate">
+            <button id="applyDateFilter" class="filter-btn">Apply</button>
+            <button id="resetFilters" class="filter-btn secondary">Reset</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="orders-table" class="data-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Orders will be dynamically populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div id="orderDetailModal" class="modal">
+    <div class="modal-content wide-modal">
+        <span class="close">&times;</span>
+        <h2>Order Details</h2>
+        <div class="order-details">
+            <div class="detail-row">
+                <span class="detail-label">Order ID:</span>
+                <span id="orderDetailId" class="detail-value"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Customer:</span>
+                <span id="orderDetailCustomer" class="detail-value"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date:</span>
+                <span id="orderDetailDate" class="detail-value"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span id="orderDetailStatus" class="detail-value"></span>
+            </div>
+            <div id="deliveryAddressSection" class="detail-row">
+                <span class="detail-label">Delivery Address:</span>
+                <span id="orderDeliveryAddress" class="detail-value"></span>
+            </div>
+            <div id="orderNoteSection" class="detail-row">
+                <span class="detail-label">Note:</span>
+                <span id="orderNote" class="detail-value"></span>
+            </div>
+        </div>
+        
+        <h3>Order Items</h3>
+        <table id="orderItemsTable" class="data-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Order items will be populated here -->
+            </tbody>
+        </table>
+        
+        <div class="total-section">
+            <span class="total-label">Total Amount:</span>
+            <span id="orderDetailTotal" class="total-value"></span>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="cancel-btn" onclick="document.getElementById('orderDetailModal').style.display='none'">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="updateStatusModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Update Order Status</h2>
+        <form id="updateStatusForm">
+            <input type="hidden" id="updateOrderId">
+            <div class="form-group">
+                <label>Current Status:</label>
+                <span id="currentOrderStatus" class="status-text"></span>
+            </div>
+            <div class="form-group">
+                <label for="newOrderStatus">New Status:</label>
+                <select id="newOrderStatus" required>
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button type="submit" class="save-btn">Update Status</button>
+                <button type="button" class="cancel-btn" onclick="document.getElementById('updateStatusModal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
         </div>
     </div>
 
@@ -186,8 +375,10 @@
     </div>
 
 
+ 
     <!-- Add a modified version of the dashboard.js with user management functionality -->
     <script src="../scripts/dashboard.js"></script>
     <script src="../scripts/adminMenu.js"></script>
+    <script src="../scripts/adminOrdermanagement.js"></script>
 </body>
 </html>

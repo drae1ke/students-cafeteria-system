@@ -11,7 +11,7 @@
 
         /* Header and Navigation */
         .header {
-            background-color: blue;
+            background-color: rgb(100,100,100);
             padding: 1rem 2rem;
             position: fixed;
             width: 100%;
@@ -34,6 +34,7 @@
         }
         .logo img{
             color: #ffffff;
+            height:10px;
         }
 
        
@@ -41,7 +42,6 @@
             display: flex;
             justify-content: center;
             top: 70px;
-            background-color: rgb(28, 28, 118);
             color: white;
             width: 250px;
             padding: 10px;
@@ -64,7 +64,7 @@
         .nav-menu a {
             display: block;
             padding: 15px;
-            color: green;
+            color: blue;
             opacity: 1;
             font-weight: bold;
             text-decoration: none;
@@ -80,7 +80,7 @@
         /* Hero Section */
         .hero {
             height: 100vh;
-            background:url('../img/pexels-ella-olsson-572949-1640772.jpg') center/cover no-repeat;
+            background:url('../img/food1.jpg') center/cover no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;

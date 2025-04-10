@@ -49,8 +49,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 app.use('/admin', require('./routes/admin'));
-app.use('/', require('./routes/api/menuroute'));
-app.use('/mpesa', require('./routes/mpesa'));
+
 
 
 // Password reset routes (adding these here)
@@ -63,6 +62,12 @@ app.use(verifyJWT);
 app.use('/profile', require('./routes/profile'));
 app.use('/employees', require('./routes/api/employees'));
 app.use('/users', require('./routes/api/users'));
+app.use('/mpesa', require('./routes/mpesa'));
+// Forward /orders to /api/orders for backward compatibility
+app.use('/orders', require('./routes/api/orders'));
+app.use('/api/orders', require('./routes/api/orders'));
+app.use('/', require('./routes/api/menuroute'))
+
 
 app.all('*', (req, res) => {
     res.status(404);

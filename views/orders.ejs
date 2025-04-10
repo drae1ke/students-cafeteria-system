@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="css/order.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="/">Food Ordering System</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">Menu</a></li>
+                <li><a href="/cart.html">Cart</a></li>
+                <li><a href="/orders.html" class="active">My Orders</a></li>
+                <li><a href="/account.html">Account</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="container">
+            <h1>My Orders</h1>
+            <div id="orders-container" class="orders-container">
+                <p>Loading your orders...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Food Ordering System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { displayOrders } from '../scripts/orders.js';
+        
+        // Load orders when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', displayOrders);
+        } else {
+            displayOrders();
+        }
+    </script>
+</body>
+</html>

@@ -17,6 +17,10 @@ router.get('/adminform', (req,res) =>{
     res.render('adminform')
 });
 
+router.get('/orders', (req, res) => {
+    res.render('orders');
+});
+
 router.get('/e-wallet',(req,res)=>{
     res.render('e-wallet');
 })

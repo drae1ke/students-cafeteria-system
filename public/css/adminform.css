@@ -125,3 +125,110 @@ button:disabled {
 .error-message {
     display: none; /* Hide by default */
 }
+ 
+.error-message
+    /*  CSS for Orders Management */
+    .filter-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .filter-btn {
+        background-color: #4a6fdc;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .filter-btn.secondary {
+        background-color: #6c757d;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+        color: white;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background-color: #ffc107;
+    }
+    
+    .status-processing {
+        background-color: #17a2b8;
+    }
+    
+    .status-ready {
+        background-color: #6610f2;
+    }
+    
+    .status-completed {
+        background-color: #28a745;
+    }
+    
+    .status-cancelled {
+        background-color: #dc3545;
+    }
+    
+    .view-btn {
+        background-color: green;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+    
+    .wide-modal .modal-content {
+        width: 80%;
+        max-width: 800px;
+    }
+    
+    .order-details {
+        margin-bottom: 20px;
+    }
+    
+    .detail-row {
+        margin-bottom: 10px;
+        display: flex;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        width: 150px;
+    }
+    
+    .total-section {
+        margin-top: 20px;
+        text-align: right;
+        font-size: 1.2em;
+    }
+    
+    .total-label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    .total-value {
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .status-text {
+        font-weight: bold;
+    }
+

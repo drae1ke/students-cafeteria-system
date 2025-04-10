@@ -1,6 +1,6 @@
 // checkout.js
 import { cartItems, removeFromCart, updateCartDisplay } from "./cart.js";
-import { updatePaymentSummary } from "./paymentSummary.js";
+import { updatePaymentSummary } from "./orders.js";
 
 async function getMenuItems() {
     try {
