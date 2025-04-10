@@ -30,7 +30,6 @@ router.post('/stkpush', async (req, res) => {
         return res.status(400).json({ message: "Phone number and amount are required" });
     }
 
-    // Convert phone number format (07xxxxxxxx -> 2547xxxxxxxx)
     const formattedPhone = phone.replace(/^(\+?254|0)/, "254");
     const accessToken = await getAccessToken();
 
@@ -58,12 +57,18 @@ router.post('/stkpush', async (req, res) => {
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
+        console.log("STK Push Response:", response.data);
         res.json({ message: "STK Push sent. Enter your M-Pesa PIN", response: response.data });
+
     } catch (error) {
         console.error("STK Push Error:", error.response?.data || error.message);
-        res.status(500).json({ message: "Failed to send STK Push", error: error.response?.data || error.message });
+        res.status(500).json({ 
+            message: "Failed to send STK Push", 
+            error: error.response?.data || error.message 
+        });
     }
 });
+
 
 // Handle M-Pesa Callback
 router.post('/callback', async (req, res) => {
