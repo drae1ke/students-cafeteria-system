@@ -42,9 +42,9 @@ const loadUsers = () => {
                     <td>${user.email}</td>
                     <td>${user.regno}</td>
                     <td>${roleNames.join(', ')}</td>
-                    <td>
-                        <button onclick="editUser('${user._id}')">Edit</button>
-                        <button onclick="deleteUser('${user._id}')">Delete</button>
+                    <td class="user-actions">
+                        <button class="edit-btn" onclick="editUser('${user._id}')" style="background-color: #2196F3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s; margin-right: 8px;">Edit</button>
+                        <button class="delete-btn" onclick="deleteUser('${user._id}')" style="background-color: #F44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.3s;">Delete</button>
                     </td>
                 </tr>
             `;

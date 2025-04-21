@@ -51,11 +51,11 @@ const handleLogin = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 
         });
 
-        // Send accessToken in the response
+        // Send both tokens to the client
         res.json({ 
-            success: true, 
-            accessToken: accessToken,
-            redirect: '/e-wallet'
+            accessToken,
+            roles,
+            username: foundUser.username
         });
 
     } catch (err) {

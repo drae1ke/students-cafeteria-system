@@ -1,4 +1,10 @@
-/* Base Styles */
+:root {
+  --primary-purple: #8B5CF6;
+  --secondary-purple: #E5DEFF;
+  --orange: #F97316;
+  --background: #F5F5F5;
+  --text-color: #333;
+}
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
@@ -78,7 +84,7 @@ body {
 }
 
 .auth-tab.active {
-  background: #007bff;
+  background: #8B5CF6;
   color: white;
 }
 
@@ -135,7 +141,7 @@ body {
 button[type="submit"] {
   width: 100%;
   padding: 1rem;
-  background: #007bff;
+  background: #8B5CF6;
   color: white;
   border: none;
   border-radius: 5px;
@@ -145,7 +151,7 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-  background: #0056b3;
+  background: #8B5CF6;
 }
 
 /* Form Footer */
@@ -154,7 +160,7 @@ button[type="submit"]:hover {
   text-align: center;
 }
 .form-footer a {
-  color: #007bff;
+  color: #8B5CF6;
   text-decoration: none;
 }
 .form-footer a:hover {

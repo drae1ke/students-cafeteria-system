@@ -1,3 +1,11 @@
+:root {
+    --primary-purple: #8B5CF6;
+    --secondary-purple: #E5DEFF;
+    --orange: #F97316;
+    --background: #F5F5F5;
+    --text-color: #333;
+}
+
 /* Base Styles */
 * {
     box-sizing: border-box;
@@ -15,11 +23,14 @@
     display: flex;
     min-height: 100vh;
   }
+  .header h1{
+    color: #1976D2;
+  }
   
   /* Sidebar */
   .sidebar {
-    width: 250px;
-    background: #1a237e;
+    width: 200px;
+    background: #1976D2;
     padding: 20px;
     color: white;
   }
@@ -30,7 +41,6 @@
     width: 100%;
     padding: 12px;
     margin: 8px 0;
-    background: #3949ab;
     border: none;
     color: white;
     cursor: pointer;
@@ -57,7 +67,14 @@
   .content-section {
     margin-top: 20px;
   }
-  
+  .section-header h2{
+    color: #1976D2;
+  }
+  .logo{
+    color: #D32F2F;
+    font-weight: bold;
+    font-size: 1.5em;
+  }
   /* Data Tables */
   .data-table {
     width: 100%;
@@ -87,7 +104,8 @@
   }
   
   .stat-card {
-    background: white;
+    background: #1976D2;
+    color: #f5f5f5;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -158,5 +176,267 @@
   .modal-buttons {
     display: flex;
     justify-content: space-between;
+  }
+  
+  /* Button Styles */
+  .edit-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-right: 8px;
+  }
+  
+  .edit-btn:hover {
+    background-color: #1976D2;
+  }
+  
+  .delete-btn {
+    background-color: #F44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .delete-btn:hover {
+    background-color: #D32F2F;
+  }
+  
+  .add-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+  }
+  
+  .add-btn:hover {
+    background-color: #388E3C;
+  }
+  
+  .filter-btn {
+    background-color: #9C27B0;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: 8px;
+  }
+  
+  .filter-btn:hover {
+    background-color: #7B1FA2;
+  }
+  
+  .filter-btn.secondary {
+    background-color: #757575;
+  }
+  
+  .filter-btn.secondary:hover {
+    background-color: #616161;
+  }
+  
+  .save-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+  }
+  
+  .save-btn:hover {
+    background-color: #388E3C;
+  }
+  
+  .cancel-btn {
+    background-color: #757575;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #616161;
+  }
+  
+  /* Button Container Styles */
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  
+  /* User Management Button Styles */
+  .role-btn {
+    background-color: #673AB7;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 4px;
+    font-size: 14px;
+  }
+  
+  .role-btn:hover {
+    background-color: #5E35B1;
+    transform: translateY(-1px);
+  }
+  
+  .role-btn.active {
+    background-color: #512DA8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .user-action-btn {
+    background-color: #607D8B;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 4px;
+    font-size: 14px;
+  }
+  
+  .user-action-btn:hover {
+    background-color: #546E7A;
+    transform: translateY(-1px);
+  }
+  
+  .user-action-btn.primary {
+    background-color: #2196F3;
+  }
+  
+  .user-action-btn.primary:hover {
+    background-color: #1976D2;
+  }
+  
+  .user-action-btn.danger {
+    background-color: #F44336;
+  }
+  
+  .user-action-btn.danger:hover {
+    background-color: #D32F2F;
+  }
+  
+  /* User Management Styles */
+  .user-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .user-actions button {
+    min-width: 80px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: white;
+    font-size: 14px;
+  }
+  
+  .user-actions .edit-btn {
+    background-color: #2196F3;
+  }
+  
+  .user-actions .edit-btn:hover {
+    background-color: #1976D2;
+    transform: translateY(-1px);
+  }
+  
+  .user-actions .delete-btn {
+    background-color: #F44336;
+  }
+  
+  .user-actions .delete-btn:hover {
+    background-color: #D32F2F;
+    transform: translateY(-1px);
+  }
+  
+  /* User Modal Styles */
+  .user-modal .modal-content {
+    max-width: 500px;
+  }
+  
+  .user-modal .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .user-modal label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .user-modal input[type="text"],
+  .user-modal input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+  }
+  
+  .user-modal input[type="text"]:focus,
+  .user-modal input[type="email"]:focus {
+    border-color: #2196F3;
+    outline: none;
+  }
+  
+  /* Checkbox Group Styles */
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px 12px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    transition: all 0.3s;
+  }
+  
+  .checkbox-group label:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
   }
   

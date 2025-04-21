@@ -1,4 +1,10 @@
-
+:root {
+    --primary-purple: #8B5CF6;
+    --secondary-purple: #E5DEFF;
+    --orange: #F97316;
+    --background: #F5F5F5;
+    --text-color: #333;
+}
 
 .orders-container {
     width: 100%;

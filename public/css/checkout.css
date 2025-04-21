@@ -154,8 +154,21 @@
     border: none;
     border-radius: 8px;
     color: white;
-    background-color: green;
+    background-color: rgb(177, 39, 4);
     margin-top: 11px;
     margin-bottom: 15px;
   }
-  
+  .place-order-button:hover {
+    background-color: #8B5CF6;
+    cursor: pointer;
+  }
+  .update-quantity{
+    color:#8B5CF6;
+    border: none;
+    cursor: pointer;
+  }
+  .delete-quantity{
+    color:#F43F5E;
+    border: none;
+    cursor: pointer;
+  }

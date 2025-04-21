@@ -41,7 +41,7 @@
                 </div>
                 <div class="stat-card">
                   <h3>Today's Sales</h3>
-                  <p id="today-sales">$0.00</p>
+                  <p id="today-sales">KES 0.00</p>
                 </div>
               </div>
 
@@ -94,7 +94,7 @@
                                             %>
                                             <%= roles.join(', ') %>
                                         </td>
-                                        <td class="actions">
+                                        <td class="user-actions">
                                             <button class="edit-btn" onclick="editUser('<%= user._id %>')">Edit</button>
                                             <button class="delete-btn" onclick="deleteUser('<%= user._id %>')">Delete</button>
                                         </td>
@@ -340,7 +340,7 @@
     </div>
 
     <!-- User edit modal -->
-    <div id="userEditModal" class="modal">
+    <div id="userEditModal" class="modal user-modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Edit User</h2>

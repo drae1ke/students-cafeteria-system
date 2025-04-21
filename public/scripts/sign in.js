@@ -221,12 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
         showLoading(false);
 
-        if (data.success) {
+        if (data.accessToken) {
           // Store the access token
           localStorage.setItem('accessToken', data.accessToken);
-          window.location.href = data.redirect;
+          window.location.href = '/e-wallet';
         } else {
-          showError('login-regno', data.message || 'Login failed');
+          showError('login-regno', 'Login failed');
         }
       } catch (error) {
         showLoading(false);

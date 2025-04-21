@@ -1,3 +1,4 @@
+// Form validation functions
 function validateNumber() {
     const number = document.getElementById('number').value;
     const error = document.getElementById('num-error');
@@ -20,7 +21,7 @@ function validateAmount() {
     const amount = document.getElementById('amount').value;
     const cashAmount = Number(amount);
 
-    if (isNaN(cashAmount) || cashAmount < 1) {
+    if (isNaN(cashAmount) || cashAmount < 10) {
         error.innerHTML = "Minimum deposit is Ksh.10";
         return false;
     } else if (cashAmount > 100000) {
@@ -32,7 +33,16 @@ function validateAmount() {
     }
 }
 
-async function initiateMpesaPayment() {
+// Navigation menu toggle
+function toggleMenu() {
+    const navMenu = document.getElementById('nav-menu');
+    navMenu.classList.toggle('active');
+}
+
+// MPESA Payment integration
+async function initiateMpesaPayment(event) {
+    event.preventDefault();
+    
     const number = document.getElementById('number').value;
     const amount = document.getElementById('amount').value;
     const submitError = document.getElementById('submit-error');
@@ -43,19 +53,27 @@ async function initiateMpesaPayment() {
     }
 
     try {
-        const response = await fetch('http://localhost:3500/mpesa/stkpush', {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            window.location.href = '/signin';
+            return;
+        }
+
+        /*const response = await fetch('http://localhost:3500/mpesa/stkpush', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
             },
             body: JSON.stringify({ phone: number, amount: amount })
         });
+        */
 
         const data = await response.json();
 
         if (response.ok) {
             alert("STK Push sent. Please enter your M-Pesa PIN to complete the transaction.");
-            console.log(data); // Log response for debugging
+            console.log(data);
         } else {
             submitError.textContent = `Error: ${data.message || "Something went wrong"}`;
         }
@@ -65,16 +83,10 @@ async function initiateMpesaPayment() {
     }
 }
 
-// Event listener for deposit button
-document.querySelector('.submit-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    initiateMpesaPayment();
-});
-
-// Function to fetch and update balance
+// Balance update
 async function updateBalanceDisplay() {
     try {
-        const response = await fetch('http://localhost:3500/user/balance'); // Ensure this endpoint exists
+        const response = await fetch('http://localhost:3500/user/balance');
         const data = await response.json();
 
         if (response.ok) {
@@ -85,10 +97,15 @@ async function updateBalanceDisplay() {
     }
 }
 
-// Fetch balance on page load
-document.addEventListener('DOMContentLoaded', updateBalanceDisplay);
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    updateBalanceDisplay();
+    
+    // Add input validation listeners
+    document.getElementById('number').addEventListener('input', validateNumber);
+    document.getElementById('amount').addEventListener('input', validateAmount);
+    
+    // Add form submission listener
+    document.getElementById('payment-form').addEventListener('submit', initiateMpesaPayment);
+});
 
-function toggleMenu() {
-    const navMenu = document.getElementById('nav-menu');
-    navMenu.classList.toggle('active');
-}

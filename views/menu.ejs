@@ -9,14 +9,20 @@
     <link rel="shortcut icon" href="../img/favicon.png">
 </head>
 <body>
-    <div class="cart">
-        <a href="/checkout"><button class="cart-toggle">
-            <img src="../img/cart-icon.png" alt="cart"> <span id="cart-count">0</span>
-        </button></a>
-        <div class="cart-content" id="cart-content">
-            <!-- Cart items will be added here dynamically -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">
+                <p>University Cafe</p>
+            </div>
+            <div class="cart-container">
+                <a href="/checkout"><button class="cart-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    <span id="cart-count">0</span>
+                </button></a>
+            </div>
         </div>
-    </div>
+    </nav>
+    
 
     <!-- Menu Items -->
     <div class="menu-container" id="menu-container">
