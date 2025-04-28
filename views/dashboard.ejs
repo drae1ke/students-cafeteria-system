@@ -43,6 +43,14 @@
                   <h3>Today's Sales</h3>
                   <p id="today-sales">KES 0.00</p>
                 </div>
+                <div class="stat-card">
+                  <h3>Average Daily Users</h3>
+                  <p id="total-users">100</p>
+                </div>
+                <div class="stat-card">
+                  <h3>Monthly Sales</h3>
+                  <p id="today-sales">KES 0.00</p>
+                </div>
               </div>
 
             <!-- Flash Messages -->
@@ -145,60 +153,40 @@
             </div>
 
             <div id="sales-section" class="content-section" style="display: none;">
-                <!-- Sales analytics content from existing dashboard -->
+                <div class="section-header">
+                    <h2>Sales Analytics</h2>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Weekly Sales</h3>
+                        <div class="chart-container">
+                            <canvas id="weeklySalesChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <h3>Customer Rate</h3>
+                        <div class="chart-container">
+                            <canvas id="customerRateChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-filters">
+                    <div class="filter-group">
+                        <label for="chartDateRange">Date Range:</label>
+                        <select id="chartDateRange">
+                            <option value="week">Last Week</option>
+                            <option value="month">Last Month</option>
+                            <option value="quarter">Last Quarter</option>
+                        </select>
+                    </div>
+                    <button id="applyChartFilter" class="filter-btn">Apply</button>
+                </div>
             </div>
-               <!-- Orders Section (Add this to your existing dashboard HTML) -->
-<div id="orders-section" class="content-section" style="display: none;">
-    <div class="section-header">
-        <h2>Order Management</h2>
-        <div class="search-bar">
-            <input type="text" id="orderSearchInput" placeholder="Search orders...">
-        </div>
-    </div>
 
-    <div class="filter-controls">
-        <div class="filter-group">
-            <label for="statusFilter">Status:</label>
-            <select id="statusFilter">
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="ready">Ready</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="startDate">From:</label>
-            <input type="date" id="startDate">
-            <label for="endDate">To:</label>
-            <input type="date" id="endDate">
-            <button id="applyDateFilter" class="filter-btn">Apply</button>
-            <button id="resetFilters" class="filter-btn secondary">Reset</button>
-        </div>
-    </div>
-
-    <div class="table-responsive">
-        <table id="orders-table" class="data-table">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Items</th>
-                    <th>Total</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Orders will be dynamically populated here -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Order Detail Modal -->
+<!-- Orders Section -->
 <div id="orders-section" class="content-section" style="display: none;">
     <div class="section-header">
         <h2>Order Management</h2>
@@ -380,5 +368,6 @@
     <script src="../scripts/dashboard.js"></script>
     <script src="../scripts/adminMenu.js"></script>
     <script src="../scripts/adminOrdermanagement.js"></script>
+    <script src="../scripts/sales.js"></script>
 </body>
 </html>
