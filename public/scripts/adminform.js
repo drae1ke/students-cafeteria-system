@@ -64,7 +64,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         
         const { token } = data;
         localStorage.setItem('adminToken', token);
-        // Keep this as /dashboard since that's your actual frontend path
+
         window.location.href = '/dashboard';
     } catch (error) {
         if (error.message !== 'Validation failed' && error.message !== 'API error') {
@@ -167,7 +167,7 @@ function addAuthorizationHeader(headers = {}) {
     if (token) {
         return {
             ...headers,
-            'Authorization': `Bearer ${token}` // Make sure the format matches exactly
+            'Authorization': `Bearer ${token}`
         };
     }
     return headers;

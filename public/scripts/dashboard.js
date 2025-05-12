@@ -1,10 +1,6 @@
 "use strict";
 
 // --------- User Management Functions ---------
-
-/**
- * Fetches and displays all users in the table
- */
 const loadUsers = () => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
@@ -274,5 +270,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     showSection('users');
-    loadUsers(); // This now includes auth check
+    loadUsers(); 
 });

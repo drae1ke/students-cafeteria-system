@@ -195,7 +195,6 @@ function updateChart(chartId, labels, data, type) {
 }
 
 // This function would fetch actual data from your backend
-// You'll need to implement this based on your API
 function fetchActualData(dateRange) {
     const token = localStorage.getItem('adminToken');
     if (!token) {

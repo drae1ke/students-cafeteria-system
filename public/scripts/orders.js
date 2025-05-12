@@ -109,11 +109,11 @@ async function placeOrder() {
             return sum + (item.price * item.quantity);
         }, 0);
         
-        // Apply subsidy if applicable (optional)
+        // Apply subsidy rate
         const subsidyRate = 0.10; // 10%
         const finalAmount = totalAmount * (1 - subsidyRate);
         
-        // Prepare order data - No need to include userId as it will come from JWT
+        // Prepare order data 
         const orderData = {
             items: formattedItems,
             orderDate: new Date().toISOString(),
@@ -246,7 +246,7 @@ async function getOrders() {
 // ==========================================
 async function updatePaymentSummary() {
     try {
-        // Get cart items from localStorage to avoid circular dependency
+        // Get cart items from localStorage
         const currentCartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
         const itemCount = currentCartItems.reduce((sum, item) => sum + item.quantity, 0);
         const subsidyRate = 0.10;

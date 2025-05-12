@@ -14,7 +14,8 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/dbConn');
 const PORT = process.env.PORT || 3500;
 
-app.set('view engine','ejs')
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Connect to MongoDB
 connectDB();
@@ -52,7 +53,7 @@ app.use('/admin', require('./routes/admin'));
 
 
 
-// Password reset routes (adding these here)
+// Password reset routes (adding this line)
 app.use('/', require('./routes/password'));
 
 // Apply verifyJWT middleware BEFORE protected routes
@@ -63,7 +64,6 @@ app.use('/profile', require('./routes/profile'));
 app.use('/employees', require('./routes/api/employees'));
 app.use('/users', require('./routes/api/users'));
 app.use('/mpesa', require('./routes/mpesa'));
-// Forward /orders to /api/orders for backward compatibility
 app.use('/orders', require('./routes/api/orders'));
 app.use('/api/orders', require('./routes/api/orders'));
 app.use('/', require('./routes/api/menuroute'))
@@ -72,7 +72,7 @@ app.use('/', require('./routes/api/menuroute'))
 app.all('*', (req, res) => {
     res.status(404);
     if (req.accepts('html')) {
-        res.sendFile(path.join(__dirname, 'views', '404.html'));
+        res.render('404');
     } else if (req.accepts('json')) {
         res.json({ "error": "404 Not Found" });
     } else {

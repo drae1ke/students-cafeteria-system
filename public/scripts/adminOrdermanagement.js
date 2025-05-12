@@ -10,7 +10,6 @@ const loadOrders = async () => {
         }
 
         console.log('Fetching all orders with token:', token);
-        // Changed path to match the API route structure
         const response = await fetch('/api/orders', {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -77,7 +76,6 @@ const loadOrders = async () => {
         });
     } catch (error) {
         console.error('Error loading orders:', error);
-        // Use the existing showNotification function from dashboard.js
         showNotification('Failed to load orders. Please try again.', 'error');
     }
 };
@@ -372,14 +370,10 @@ const setupDateFilter = () => {
 
 // Initialize orders section when the dashboard is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Add Orders section to the showSection function if not already defined
     if (typeof showSection === 'function') {
-        // The original showSection function is already defined in dashboard.js
-        // We'll hook into the existing function by adding a click event listener
         const ordersLink = document.querySelector('a[onclick*="showSection(\'orders\')"]');
         if (ordersLink) {
             ordersLink.addEventListener('click', () => {
-                // This will run after the original showSection function
                 setTimeout(() => {
                     loadOrders();
                     setupOrderSearch();

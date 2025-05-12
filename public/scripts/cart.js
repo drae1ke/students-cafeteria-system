@@ -1,4 +1,4 @@
-// cart.js
+
 // Initialize cart from localStorage
 let cartItems = [];
 

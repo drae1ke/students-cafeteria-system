@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Attach tab switching function to window
     window.openTab = openTab;
 
-    // Add this function to show/hide loading state
+    // Attach loading spinner function to window
     function setLoading(isLoading) {
         // Assuming you add a loading-spinner element to your HTML
         const spinner = document.querySelector('.loading-spinner');

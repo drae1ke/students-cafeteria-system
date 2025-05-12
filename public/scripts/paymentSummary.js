@@ -64,7 +64,7 @@ async function getAllMenuItems() {
 
 export async function updatePaymentSummary() {
     try {
-        // Get cart items from localStorage to avoid circular dependency
+        // Get cart items from localStorage
         const currentCartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
         const itemCount = currentCartItems.reduce((sum, item) => sum + item.quantity, 0);
         const subsidyRate = 0.10;

@@ -22,7 +22,6 @@ async function refreshToken() {
   }
 }
 
-// Changed from require() to fetch API call
 async function initMenu() {
   try {
     let accessToken = localStorage.getItem('accessToken');
