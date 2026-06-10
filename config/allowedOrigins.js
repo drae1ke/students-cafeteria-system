@@ -4,6 +4,6 @@ const allowedOrigins = [
     'http://localhost:3500',
     'http://localhost:3000',
     'https://e78e-217-199-148-231.ngrok-free.app',
-    'https://studentscafe.onrender.com/'
+    'https://studentscafe.onrender.com'
 ];
 module.exports = allowedOrigins;
