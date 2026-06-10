@@ -1,80 +1,204 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Order = require('../../model/orders');
 const User = require('../../model/User');
+const MenuItem = require('../../model/meal');
 const verifyJWT = require('../../middleware/verifyJWT');
+const {
+    DEFAULT_SUBSIDY_RATE,
+    buildOrderReceipt,
+    buildReceiptNumber,
+    roundMoney
+} = require('../../utils/receipts');
+
+const ADMIN_ROLE = 5150;
+const MAX_ITEM_QUANTITY = 50;
+
+const isAdmin = (req) => Array.isArray(req.roles) && req.roles.includes(ADMIN_ROLE);
+
+const getStudentUser = (username, session) => {
+    let query = User.findOne({ username });
+    if (session) query = query.session(session);
+    return query.exec();
+};
+
+const getMenuItemsById = (ids, session) => {
+    let query = MenuItem.find({ _id: { $in: ids } });
+    if (session) query = query.session(session);
+    return query.exec();
+};
+
+const assertValidOrderItems = async (rawItems, session) => {
+    if (!rawItems || !Array.isArray(rawItems) || rawItems.length === 0) {
+        const error = new Error('Order must contain items');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const requestedItems = rawItems.map((item) => {
+        const menuItemId = String(item.menuItemId || item.itemId || item.id || item._id || '');
+        const quantity = Number(item.quantity);
+
+        if (!mongoose.Types.ObjectId.isValid(menuItemId)) {
+            const error = new Error('Each order item must include a valid menu item id');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ITEM_QUANTITY) {
+            const error = new Error(`Item quantity must be between 1 and ${MAX_ITEM_QUANTITY}`);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        return { menuItemId, quantity };
+    });
+
+    const uniqueIds = [...new Set(requestedItems.map((item) => item.menuItemId))];
+    const menuItems = await getMenuItemsById(uniqueIds, session);
+    const menuById = new Map(menuItems.map((item) => [String(item._id), item]));
+
+    const validatedItems = requestedItems.map((requestedItem) => {
+        const menuItem = menuById.get(requestedItem.menuItemId);
+
+        if (!menuItem) {
+            const error = new Error('One or more menu items no longer exist');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (!menuItem.availability) {
+            const error = new Error(`${menuItem.name} is currently unavailable`);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        return {
+            name: menuItem.name,
+            quantity: requestedItem.quantity,
+            price: roundMoney(menuItem.price)
+        };
+    });
+
+    const subtotalAmount = roundMoney(
+        validatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    );
+    const subsidyAmount = roundMoney(subtotalAmount * DEFAULT_SUBSIDY_RATE);
+    const totalAmount = roundMoney(subtotalAmount - subsidyAmount);
+
+    return {
+        items: validatedItems,
+        subtotalAmount,
+        subsidyAmount,
+        totalAmount
+    };
+};
+
+const getScopedOrder = async (req) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        const error = new Error('Invalid order id');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (isAdmin(req)) {
+        const order = await Order.findById(req.params.id).populate('userId', 'username email regno');
+        return { order, user: order?.userId };
+    }
+
+    const user = await getStudentUser(req.user);
+    if (!user) {
+        const error = new Error('User not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const order = await Order.findOne({ _id: req.params.id, userId: user._id });
+    return { order, user };
+};
 
 router.get('/', verifyJWT, async (req, res) => {
     try {
-        // Check if user is admin
-        if (!req.roles || !req.roles.includes(5150)) { // 5150 is admin role code
-            return res.status(403).json({ message: 'Admin access required' });
+        if (req.baseUrl === '/api/orders') {
+            if (!isAdmin(req)) {
+                return res.status(403).json({ message: 'Admin access required' });
+            }
+
+            const orders = await Order.find()
+                .populate('userId', 'username email regno')
+                .sort({ orderDate: -1 });
+
+            return res.json(orders);
         }
-        
-        // Fetch all orders with user details populated
-        const orders = await Order.find()
-            .populate('userId', 'username email')
-            .sort({ orderDate: -1 }); // Newest first
-        
-        res.json(orders);
+
+        const user = await getStudentUser(req.user);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const orders = await Order.find({ userId: user._id })
+            .sort({ orderDate: -1 });
+
+        return res.json(orders);
     } catch (error) {
         console.error('Error fetching orders:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-// GET a single order by ID
 router.get('/:id', verifyJWT, async (req, res) => {
     try {
-        // Check if user is admin
-        if (!req.roles || !req.roles.includes(5150)) {
-            return res.status(403).json({ message: 'Admin access required' });
-        }
-        
-        const order = await Order.findById(req.params.id)
-            .populate('userId', 'username email');
-        
+        const { order } = await getScopedOrder(req);
+
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
-        
+
         res.json(order);
     } catch (error) {
         console.error('Error fetching order:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
     }
 });
 
-// UPDATE order status
+router.get('/:id/receipt', verifyJWT, async (req, res) => {
+    try {
+        const { order, user } = await getScopedOrder(req);
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        res.json(buildOrderReceipt(user, order));
+    } catch (error) {
+        console.error('Error generating order receipt:', error);
+        res.status(error.statusCode || 500).json({ message: error.message || 'Failed to generate receipt' });
+    }
+});
+
 router.put('/:id/status', verifyJWT, async (req, res) => {
     try {
-        // Check if user is admin
-        if (!req.roles || !req.roles.includes(5150)) {
+        if (!isAdmin(req)) {
             return res.status(403).json({ message: 'Admin access required' });
         }
-        
+
         const { status } = req.body;
-        
-        if (!status) {
-            return res.status(400).json({ message: 'Status is required' });
-        }
-        
-        // Valid statuses
         const validStatuses = ['Pending', 'Processing', 'Ready', 'Completed', 'Cancelled'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ message: 'Invalid status value' });
         }
-        
+
         const order = await Order.findByIdAndUpdate(
             req.params.id,
             { status },
             { new: true }
         );
-        
+
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
-        
+
         res.json(order);
     } catch (error) {
         console.error('Error updating order status:', error);
@@ -82,75 +206,107 @@ router.put('/:id/status', verifyJWT, async (req, res) => {
     }
 });
 
-// POST route to create a new order
 router.post('/', verifyJWT, async (req, res) => {
+    let session;
+
     try {
-        const username = req.user
-        const userData = await User.findOne({ username: username });
-        const userId = userData._id;
-        console.log('Received order data:', req.body);
-        
-        // Validate the incoming data
-        if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
-            return res.status(400).json({ message: 'Order must contain items' });
-        }
-        
-        // Calculate totalAmount on the server if not provided
-        let totalAmount = req.body.totalAmount;
-        if (!totalAmount) {
-            console.log('totalAmount not provided, calculating on server');
-            totalAmount = req.body.items.reduce((sum, item) => {
-                return sum + (item.price * item.quantity);
-            }, 0);
-        }
-        
-        // Ensure each item has the required fields
-        const validatedItems = req.body.items.map(item => {
-            // Make sure we have at least the required fields
-            if (!item.name || !item.price || !item.quantity) {
-                throw new Error('Each item must have name, price, and quantity');
+        session = await mongoose.startSession();
+        let savedOrder;
+        let receipt;
+
+        await session.withTransaction(async () => {
+            const user = await getStudentUser(req.user, session);
+            if (!user) {
+                const error = new Error('User not found');
+                error.statusCode = 404;
+                throw error;
             }
-            
-            return {
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity
-            };
+
+            const totals = await assertValidOrderItems(req.body.items, session);
+
+            if (roundMoney(user.balance) < totals.totalAmount) {
+                const error = new Error('Insufficient e-wallet balance. Please deposit funds before placing this order.');
+                error.statusCode = 402;
+                error.details = {
+                    balance: roundMoney(user.balance),
+                    required: totals.totalAmount
+                };
+                throw error;
+            }
+
+            const balanceBefore = roundMoney(user.balance);
+            const balanceAfter = roundMoney(balanceBefore - totals.totalAmount);
+            const paidAt = new Date();
+
+            const order = new Order({
+                userId: user._id,
+                items: totals.items,
+                orderDate: paidAt,
+                subtotalAmount: totals.subtotalAmount,
+                subsidyAmount: totals.subsidyAmount,
+                totalAmount: totals.totalAmount,
+                status: 'Pending',
+                paymentStatus: 'paid',
+                balanceBefore,
+                balanceAfter,
+                paidAt
+            });
+
+            order.receiptNumber = buildReceiptNumber('ORD', order._id);
+            order.paymentReference = buildReceiptNumber('PAY', order._id);
+
+            user.balance = balanceAfter;
+            user.transactions.push({
+                type: 'payment',
+                amount: totals.totalAmount,
+                status: 'completed',
+                reference: order.paymentReference,
+                receiptNumber: order.receiptNumber,
+                orderId: order._id,
+                description: `Cafeteria order ${order.receiptNumber}`,
+                balanceBefore,
+                balanceAfter,
+                completedAt: paidAt,
+                timestamp: paidAt
+            });
+
+            await order.save({ session });
+            await user.save({ session });
+
+            savedOrder = order;
+            receipt = buildOrderReceipt(user, order);
         });
-        
-        // Create a new order with the validated data
-        const newOrder = new Order({
-            userId: userId, // Set from the JWT middleware
-            items: validatedItems,
-            orderDate: req.body.orderDate || new Date(),
-            totalAmount: totalAmount,
-            status: 'Pending'
-        });
-        
-        console.log('Creating order object:', newOrder);
-        
-        // Save the order to the database
-        const savedOrder = await newOrder.save();
-        console.log('Order saved successfully:', savedOrder._id);
-        
-        // Return a response format that matches what the frontend expects
+
         res.status(201).json({
             success: true,
             orderId: savedOrder._id,
-            order: savedOrder
+            receiptNumber: savedOrder.receiptNumber,
+            paymentReference: savedOrder.paymentReference,
+            order: savedOrder,
+            receipt
         });
     } catch (error) {
         console.error('Error placing order:', error);
-        
-        // Provide more detailed error message
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({ 
-                message: 'Validation error', 
-                details: error.message 
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                message: error.message,
+                details: error.details
             });
         }
-        
+
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                details: error.message
+            });
+        }
+
         res.status(500).json({ message: error.message || 'Server error' });
+    } finally {
+        if (session) {
+            await session.endSession();
+        }
     }
 });
 

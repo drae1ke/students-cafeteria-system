@@ -44,7 +44,7 @@ const userSchema = new Schema({
     transactions: [{
         type: {
             type: String,
-            enum: ['deposit', 'payment'],
+            enum: ['deposit', 'payment', 'refund'],
             required: true
         },
         amount: {
@@ -70,6 +70,11 @@ const userSchema = new Schema({
             default: 'pending'
         },
         reference: String,
+        receiptNumber: String,
+        orderId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Order'
+        },
         mpesaReceiptNumber: String,
         merchantRequestId: String,
         checkoutRequestId: String,

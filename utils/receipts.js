@@ -65,6 +65,7 @@ const buildOrderReceipt = (user, order) => {
             status: order.status,
             paymentStatus: order.paymentStatus,
             paymentReference: order.paymentReference,
+            paidAt: order.paidAt,
             items: order.items.map((item) => ({
                 name: item.name,
                 quantity: item.quantity,
@@ -72,6 +73,10 @@ const buildOrderReceipt = (user, order) => {
                 lineTotal: roundMoney(item.price * item.quantity)
             })),
             totals
+        },
+        wallet: {
+            balanceBefore: roundMoney(order.balanceBefore),
+            balanceAfter: roundMoney(order.balanceAfter)
         }
     };
 };

@@ -236,3 +236,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// Signup form handler
+document.addEventListener('DOMContentLoaded', () => {
+  const signupForm = document.getElementById('signup-form');
+  if (signupForm) {
+    signupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showLoading(true);
+
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (!validatePassword(password)) {
+        showLoading(false);
+        return showError('signup-password', 'Minimum 8 characters required');
+      }
+
+      if (password !== confirmPassword) {
+        showLoading(false);
+        return showError('confirm-password', 'Passwords do not match');
+      }
+
+      const formData = {
+        user: document.getElementById('signup-username').value,
+        regno: document.getElementById('signup-regno').value,
+        email: document.getElementById('signup-email').value,
+        pwd: password
+      };
+
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json().catch(() => ({}));
+        showLoading(false);
+
+        if (response.ok && data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+          window.location.href = '/e-wallet';
+          return;
+        }
+
+        showError('signup-regno', data.message || 'Signup failed');
+      } catch (error) {
+        showLoading(false);
+        console.error('Signup error:', error);
+        showError('signup-regno', 'An error occurred during signup');
+      }
+    });
+  }
+});

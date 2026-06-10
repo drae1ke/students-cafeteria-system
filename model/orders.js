@@ -53,7 +53,10 @@ const orderSchema = new mongoose.Schema({
         default: 'unpaid'
     },
     paymentReference: String,
-    receiptNumber: String
+    receiptNumber: String,
+    balanceBefore: Number,
+    balanceAfter: Number,
+    paidAt: Date
 });
 
 module.exports = mongoose.model('Order', orderSchema);

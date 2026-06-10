@@ -9,6 +9,8 @@ const {
     updateMenuItem 
 } = require('../../controllers/menuController');
 const verifyJWT = require('../../middleware/verifyJWT');
+const verifyRoles = require('../../middleware/verifyRoles');
+const ROLES_LIST = require('../../config/roles_list');
 
 // Public route for add form
 router.get('/add', (req, res) => {
@@ -18,8 +20,8 @@ router.get('/add', (req, res) => {
 // Menu API endpoints
 router.get('/api/menu', verifyJWT, getMenuItems);
 router.get('/api/menu/:id', verifyJWT, getMenuItem);
-router.post('/api/menu', verifyJWT, upload.single('image'), addMenuItem);
-router.delete('/api/menu/:id', verifyJWT, deleteMenuItem);
-router.patch('/api/menu/:id', verifyJWT, upload.single('image'), updateMenuItem);
+router.post('/api/menu', verifyJWT, verifyRoles(ROLES_LIST.Admin), upload.single('image'), addMenuItem);
+router.delete('/api/menu/:id', verifyJWT, verifyRoles(ROLES_LIST.Admin), deleteMenuItem);
+router.patch('/api/menu/:id', verifyJWT, verifyRoles(ROLES_LIST.Admin), upload.single('image'), updateMenuItem);
 
 module.exports = router;

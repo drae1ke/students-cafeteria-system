@@ -66,6 +66,7 @@ app.use('/employees', require('./routes/api/employees'));
 app.use('/users', require('./routes/api/users'));
 app.use('/orders', require('./routes/api/orders'));
 app.use('/api/orders', require('./routes/api/orders'));
+app.use('/api/sales-analytics', require('./routes/api/analytics'));
 app.use('/', require('./routes/api/menuroute'))
 
 

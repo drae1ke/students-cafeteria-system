@@ -98,26 +98,15 @@ async function placeOrder() {
             }
             
             return {
-                name: menuItem.name,
-                price: menuItem.price,
+                menuItemId: menuItem._id,
                 quantity: cartItem.quantity
             };
         });
-        
-        // Calculate total amount
-        const totalAmount = formattedItems.reduce((sum, item) => {
-            return sum + (item.price * item.quantity);
-        }, 0);
-        
-        // Apply subsidy rate
-        const subsidyRate = 0.10; // 10%
-        const finalAmount = totalAmount * (1 - subsidyRate);
-        
-        // Prepare order data 
+
+        // Prepare order data. The server validates menu prices and wallet balance.
         const orderData = {
             items: formattedItems,
-            orderDate: new Date().toISOString(),
-            totalAmount: totalAmount
+            orderDate: new Date().toISOString()
         };
 
         console.log('Sending order data:', JSON.stringify(orderData));
@@ -195,10 +184,10 @@ function handleOrderSuccess(orderResult) {
     window.dispatchEvent(new CustomEvent('cart-updated'));
     
     // Display success message
-    alert(`Order placed successfully! Your order ID is: ${orderResult.orderId}`);
+    alert(`Order paid from your e-wallet. Receipt: ${orderResult.receiptNumber || orderResult.orderId}`);
     
     // Redirect to orders page
-    window.location.href = '/e-wallet';
+    window.location.href = '/orders';
 }
 
 async function getOrders() {
@@ -209,14 +198,19 @@ async function getOrders() {
              accessToken = await refreshAccessToken();
          }
         
-
+        const response = await fetch('/orders', {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json'
+            }
+        });
       
         if (!response.ok) {
             if (response.status === 401) {
                 // Token expired, refresh and retry
                 accessToken = await refreshAccessToken();
                 
-                const retryResponse = await fetch('orders', {
+                const retryResponse = await fetch('/orders', {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Accept': 'application/json'
@@ -237,6 +231,108 @@ async function getOrders() {
         console.error('Error fetching orders:', error);
         throw error;
     }
+}
+
+async function viewOrderReceipt(orderId) {
+    try {
+        let accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            accessToken = await refreshAccessToken();
+        }
+
+        let response = await fetch(`/orders/${orderId}/receipt`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.status === 401) {
+            accessToken = await refreshAccessToken();
+            response = await fetch(`/orders/${orderId}/receipt`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Accept': 'application/json'
+                }
+            });
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to fetch receipt');
+        }
+
+        const receipt = await response.json();
+        openReceiptWindow(receipt);
+    } catch (error) {
+        console.error('Error loading receipt:', error);
+        alert(error.message || 'Failed to load receipt');
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function openReceiptWindow(receipt) {
+    const receiptWindow = window.open('', '_blank');
+    if (!receiptWindow) {
+        alert('Please allow popups to view the receipt.');
+        return;
+    }
+
+    const itemsHtml = receipt.order.items.map(item => `
+        <tr>
+            <td>${escapeHtml(item.name)}</td>
+            <td>${escapeHtml(item.quantity)}</td>
+            <td>KES ${Number(item.unitPrice).toFixed(2)}</td>
+            <td>KES ${Number(item.lineTotal).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    receiptWindow.document.write(`
+        <!doctype html>
+        <html>
+        <head>
+            <title>Receipt ${escapeHtml(receipt.receiptNumber)}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+                table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+                th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+                .totals { margin-top: 16px; max-width: 360px; margin-left: auto; }
+                .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+                .total { font-weight: 700; border-top: 1px solid #222; margin-top: 8px; padding-top: 8px; }
+                .print { margin-top: 24px; padding: 10px 14px; cursor: pointer; }
+            </style>
+        </head>
+        <body>
+            <h1>JKUAT Student's Mess Receipt</h1>
+            <p><strong>Receipt:</strong> ${escapeHtml(receipt.receiptNumber)}</p>
+            <p><strong>Student:</strong> ${escapeHtml(receipt.customer.username)} (${escapeHtml(receipt.customer.regno)})</p>
+            <p><strong>Paid at:</strong> ${new Date(receipt.order.paidAt || receipt.order.orderDate).toLocaleString()}</p>
+            <p><strong>Payment ref:</strong> ${escapeHtml(receipt.order.paymentReference)}</p>
+            <table>
+                <thead>
+                    <tr><th>Item</th><th>Qty</th><th>Unit</th><th>Total</th></tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div class="totals">
+                <div><span>Subtotal</span><span>KES ${Number(receipt.order.totals.subtotal).toFixed(2)}</span></div>
+                <div><span>Subsidy</span><span>KES ${Number(receipt.order.totals.subsidy).toFixed(2)}</span></div>
+                <div class="total"><span>Total paid</span><span>KES ${Number(receipt.order.totals.total).toFixed(2)}</span></div>
+            </div>
+            <p><strong>Wallet balance after payment:</strong> KES ${Number(receipt.wallet.balanceAfter).toFixed(2)}</p>
+            <button class="print" onclick="window.print()">Print</button>
+        </body>
+        </html>
+    `);
+    receiptWindow.document.close();
 }
 
 
@@ -395,14 +491,15 @@ async function displayOrders() {
         let ordersHTML = '<div class="orders-list">';
         
         orders.forEach(order => {
-            const totalAmount = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const subsidy = totalAmount * 0.10; // Assuming same 10% subsidy
-            const finalAmount = totalAmount - subsidy;
+            const totalAmount = order.subtotalAmount ?? order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subsidy = order.subsidyAmount ?? totalAmount * 0.10;
+            const finalAmount = order.totalAmount ?? totalAmount - subsidy;
+            const displayOrderId = order.receiptNumber || order._id?.slice(-8) || order.orderId;
             
             ordersHTML += `
                 <div class="order-card">
                     <div class="order-header">
-                        <div class="order-id">Order #${order.orderId}</div>
+                        <div class="order-id">Order #${displayOrderId}</div>
                         <div class="order-date">${formatDate(order.orderDate)}</div>
                         <div class="order-status">${order.status || 'Processing'}</div>
                     </div>
@@ -443,12 +540,18 @@ async function displayOrders() {
                             <span>Final Amount:</span>
                             <span>${formatCurrency(finalAmount)}</span>
                         </div>
+                        <button class="receipt-button" data-order-id="${order._id}">
+                            View Receipt
+                        </button>
                     </div>
                 </div>`;
         });
         
         ordersHTML += '</div>';
         ordersContainer.innerHTML = ordersHTML;
+        ordersContainer.querySelectorAll('.receipt-button').forEach(button => {
+            button.addEventListener('click', () => viewOrderReceipt(button.dataset.orderId));
+        });
     } catch (error) {
         console.error('Error displaying orders:', error);
         const ordersContainer = document.getElementById('orders-container');

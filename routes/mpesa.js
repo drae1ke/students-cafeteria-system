@@ -472,6 +472,8 @@ router.get('/balance', verifyJWT, async (req, res) => {
                 timestamp: transaction.timestamp,
                 status: transaction.status,
                 reference: transaction.reference,
+                receiptNumber: transaction.receiptNumber,
+                orderId: transaction.orderId,
                 mpesaReceiptNumber: transaction.mpesaReceiptNumber,
                 failureReason: transaction.failureReason,
                 completedAt: transaction.completedAt
