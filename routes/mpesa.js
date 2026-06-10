@@ -1,323 +1,489 @@
 const express = require('express');
 const axios = require('axios');
 const moment = require('moment');
-require('dotenv').config();
 const User = require('../model/User');
 const verifyJWT = require('../middleware/verifyJWT');
+const { buildWalletReceipt, roundMoney } = require('../utils/receipts');
 
 const router = express.Router();
 
-// Generate M-Pesa Access Token
-const getAccessToken = async () => {
-    const url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
-    const auth = Buffer.from(`${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`).toString('base64');
+const TOKEN_REFRESH_BUFFER_MS = 60 * 1000;
+const tokenCache = {
+    accessToken: null,
+    expiresAt: 0
+};
 
-    try {
-        const response = await axios.get(url, {
-            headers: { Authorization: `Basic ${auth}` }
-        });
-        return response.data.access_token;
-    } catch (error) {
-        console.error("Error fetching access token:", error.response?.data || error.message);
-        throw new Error("Failed to get access token");
+const getMpesaBaseUrl = () => (process.env.MPESA_BASE_URL || 'https://sandbox.safaricom.co.ke').replace(/\/$/, '');
+
+const getMpesaCallbackUrl = () => {
+    if (process.env.MPESA_CALLBACK_URL) return process.env.MPESA_CALLBACK_URL;
+    if (process.env.CALLBACK_URL) return `${process.env.CALLBACK_URL.replace(/\/$/, '')}/mpesa/callback`;
+    return null;
+};
+
+const validateMpesaConfig = () => {
+    const required = [
+        'MPESA_CONSUMER_KEY',
+        'MPESA_CONSUMER_SECRET',
+        'MPESA_SHORTCODE',
+        'MPESA_PASSKEY'
+    ];
+    const missing = required.filter((key) => !process.env[key]);
+    if (!getMpesaCallbackUrl()) missing.push('MPESA_CALLBACK_URL');
+
+    if (missing.length) {
+        const error = new Error(`Missing M-Pesa configuration: ${missing.join(', ')}`);
+        error.statusCode = 500;
+        throw error;
     }
 };
 
-// Initiate STK Push (Protected by JWT)
-router.post('/stkpush', verifyJWT, async (req, res) => {
-    const { phone, amount } = req.body;
-    const username = req.user; // Get username from the JWT verification middleware
+const normalizePhone = (phone) => {
+    const digits = String(phone || '').replace(/\D/g, '');
 
-    if (!phone || !amount) {
-        return res.status(400).json({ message: "Phone number and amount are required" });
+    let normalized = digits;
+    if (/^0(7|1)\d{8}$/.test(digits)) {
+        normalized = `254${digits.slice(1)}`;
+    } else if (/^(7|1)\d{8}$/.test(digits)) {
+        normalized = `254${digits}`;
     }
 
+    if (!/^254(7|1)\d{8}$/.test(normalized)) {
+        return null;
+    }
+
+    return normalized;
+};
+
+const parseAmount = (amount) => {
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 10 || parsedAmount > 100000) {
+        return null;
+    }
+
+    return Math.round(parsedAmount);
+};
+
+const parseCallbackMetadata = (stkCallback) => {
+    const items = stkCallback?.CallbackMetadata?.Item || [];
+    return items.reduce((metadata, item) => {
+        if (item?.Name) metadata[item.Name] = item.Value;
+        return metadata;
+    }, {});
+};
+
+const getAccessToken = async () => {
+    validateMpesaConfig();
+
+    if (tokenCache.accessToken && Date.now() < tokenCache.expiresAt - TOKEN_REFRESH_BUFFER_MS) {
+        return tokenCache.accessToken;
+    }
+
+    const auth = Buffer
+        .from(`${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`)
+        .toString('base64');
+
+    const response = await axios.get(
+        `${getMpesaBaseUrl()}/oauth/v1/generate?grant_type=client_credentials`,
+        {
+            headers: { Authorization: `Basic ${auth}` },
+            timeout: 15000
+        }
+    );
+
+    tokenCache.accessToken = response.data.access_token;
+    tokenCache.expiresAt = Date.now() + (Number(response.data.expires_in || 3599) * 1000);
+
+    return tokenCache.accessToken;
+};
+
+const findTransaction = (user, identifiers) => {
+    return user.transactions.find((transaction) => (
+        transaction.type === 'deposit' &&
+        (
+            (identifiers.checkoutRequestId && transaction.checkoutRequestId === identifiers.checkoutRequestId) ||
+            (identifiers.merchantRequestId && transaction.merchantRequestId === identifiers.merchantRequestId) ||
+            (identifiers.reference && transaction.reference === identifiers.reference) ||
+            (identifiers.mpesaReceiptNumber && transaction.mpesaReceiptNumber === identifiers.mpesaReceiptNumber)
+        )
+    ));
+};
+
+const findUserByCallbackIdentifiers = async (identifiers) => {
+    if (identifiers.checkoutRequestId) {
+        const user = await User.findOne({ 'transactions.checkoutRequestId': identifiers.checkoutRequestId });
+        if (user) return user;
+    }
+
+    if (identifiers.merchantRequestId) {
+        const user = await User.findOne({ 'transactions.merchantRequestId': identifiers.merchantRequestId });
+        if (user) return user;
+    }
+
+    if (identifiers.mpesaReceiptNumber) {
+        const user = await User.findOne({ 'transactions.mpesaReceiptNumber': identifiers.mpesaReceiptNumber });
+        if (user) return user;
+    }
+
+    if (identifiers.phone) {
+        return User.findOne({ phone: identifiers.phone });
+    }
+
+    return null;
+};
+
+const findFallbackPendingTransaction = (user, amount) => {
+    return user.transactions
+        .filter((transaction) => (
+            transaction.type === 'deposit' &&
+            transaction.status === 'pending' &&
+            (!amount || Math.abs(Number(transaction.amount) - Number(amount)) < 0.01)
+        ))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+};
+
+const getFailureStatus = (resultCode) => {
+    const failureStatuses = {
+        1: 'insufficient_funds',
+        2: 'wrong_pin',
+        1031: 'rejected',
+        1032: 'cancelled',
+        1037: 'timeout',
+        2001: 'wrong_pin'
+    };
+
+    return failureStatuses[Number(resultCode)] || 'failed';
+};
+
+const getFailureReason = (resultCode, resultDesc) => {
+    const reasons = {
+        1: 'Insufficient funds in M-Pesa account',
+        2: 'Incorrect M-Pesa PIN entered',
+        1031: 'Transaction was rejected',
+        1032: 'Transaction cancelled by user',
+        1037: 'Transaction timed out',
+        2001: 'Incorrect M-Pesa PIN entered'
+    };
+
+    return reasons[Number(resultCode)] || resultDesc || 'Transaction failed';
+};
+
+const sendMpesaAck = (res, resultDesc = 'Callback processed successfully') => {
+    return res.status(200).json({
+        ResultCode: 0,
+        ResultDesc: resultDesc
+    });
+};
+
+router.post('/stkpush', verifyJWT, async (req, res) => {
     try {
-        // Find the user and update their phone number if not already set
-        const user = await User.findOne({ username: username });
+        validateMpesaConfig();
+
+        const phone = normalizePhone(req.body.phone);
+        const amount = parseAmount(req.body.amount);
+
+        if (!phone) {
+            return res.status(400).json({ message: 'Enter a valid Safaricom phone number' });
+        }
+
+        if (!amount) {
+            return res.status(400).json({ message: 'Amount must be between KES 10 and KES 100,000' });
+        }
+
+        const user = await User.findOne({ username: req.user });
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        // Update user's phone number if not already set
-        if (!user.phone) {
-            const formattedPhone = phone.replace(/^(\+?254|0)/, "254");
-            user.phone = formattedPhone;
-            await user.save();
-        }
-
-        const formattedPhone = phone.replace(/^(\+?254|0)/, "254");
         const accessToken = await getAccessToken();
-
-        const timestamp = moment().format("YYYYMMDDHHmmss");
-        const password = Buffer.from(`${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`).toString("base64");
-
-        // Create a unique reference for this transaction
+        const timestamp = moment().format('YYYYMMDDHHmmss');
+        const password = Buffer
+            .from(`${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`)
+            .toString('base64');
         const transactionRef = `JKUAT-${user.regno}-${timestamp}`;
+        const accountReference = 'JKUAT Mess Wallet';
 
         const stkPushData = {
             BusinessShortCode: process.env.MPESA_SHORTCODE,
             Password: password,
             Timestamp: timestamp,
-            TransactionType: "CustomerPayBillOnline",
+            TransactionType: 'CustomerPayBillOnline',
             Amount: amount,
-            PartyA: formattedPhone,
+            PartyA: phone,
             PartyB: process.env.MPESA_SHORTCODE,
-            PhoneNumber: formattedPhone,
-            CallBackURL: "https://e78e-217-199-148-231.ngrok-free.app/api/mpesa/callback",
-            AccountReference: "JKUAT Mess Wallet",
+            PhoneNumber: phone,
+            CallBackURL: getMpesaCallbackUrl(),
+            AccountReference: accountReference,
             TransactionDesc: `Deposit to e-wallet for ${user.username}`
         };
 
-        // Add a pending transaction to the user's transactions array
+        const response = await axios.post(
+            `${getMpesaBaseUrl()}/mpesa/stkpush/v1/processrequest`,
+            stkPushData,
+            {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                timeout: 20000
+            }
+        );
+
+        if (String(response.data.ResponseCode) !== '0') {
+            return res.status(502).json({
+                message: response.data.CustomerMessage || response.data.ResponseDescription || 'M-Pesa rejected the STK request',
+                response: response.data
+            });
+        }
+
+        user.phone = phone;
         user.transactions.push({
             type: 'deposit',
-            amount: Number(amount),
+            amount,
             status: 'pending',
             reference: transactionRef,
+            merchantRequestId: response.data.MerchantRequestID,
+            checkoutRequestId: response.data.CheckoutRequestID,
+            phone,
+            accountReference,
+            description: stkPushData.TransactionDesc,
+            resultDesc: response.data.CustomerMessage || response.data.ResponseDescription,
             timestamp: new Date()
         });
         await user.save();
 
-        console.log("Sending STK Push with data:", {
-            ...stkPushData,
-            Password: "***" // Hide sensitive data in logs
+        res.status(202).json({
+            message: response.data.CustomerMessage || 'STK Push sent. Enter your M-Pesa PIN',
+            transactionRef,
+            merchantRequestId: response.data.MerchantRequestID,
+            checkoutRequestId: response.data.CheckoutRequestID,
+            response: response.data
         });
+    } catch (error) {
+        console.error('STK Push Error:', error.response?.data || error.message);
+        res.status(error.statusCode || 500).json({
+            message: 'Failed to send STK Push',
+            error: error.response?.data || error.message
+        });
+    }
+});
 
-        const response = await axios.post(
-            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-            stkPushData,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
+router.post('/callback', async (req, res) => {
+    const stkCallback = req.body?.Body?.stkCallback || req.body?.stkCallback || req.body;
+
+    if (!stkCallback || typeof stkCallback.ResultCode === 'undefined') {
+        console.error('Invalid M-Pesa callback data:', req.body);
+        return res.status(400).json({ message: 'Invalid M-Pesa callback data' });
+    }
+
+    try {
+        const metadata = parseCallbackMetadata(stkCallback);
+        const amount = metadata.Amount || stkCallback.Amount;
+        const phone = normalizePhone(metadata.PhoneNumber || stkCallback.PhoneNumber);
+        const identifiers = {
+            checkoutRequestId: stkCallback.CheckoutRequestID,
+            merchantRequestId: stkCallback.MerchantRequestID,
+            mpesaReceiptNumber: metadata.MpesaReceiptNumber || stkCallback.TransactionId,
+            phone
+        };
+
+        const user = await findUserByCallbackIdentifiers(identifiers);
+        if (!user) {
+            console.warn('M-Pesa callback did not match any user:', identifiers);
+            return sendMpesaAck(res, 'Callback accepted but no matching user was found');
+        }
+
+        const transaction = findTransaction(user, identifiers) || findFallbackPendingTransaction(user, amount);
+        if (!transaction) {
+            console.warn('M-Pesa callback did not match any pending transaction:', identifiers);
+            return sendMpesaAck(res, 'Callback accepted but no matching transaction was found');
+        }
+
+        const resultCode = Number(stkCallback.ResultCode);
+        const commonUpdate = {
+            'transactions.$.merchantRequestId': identifiers.merchantRequestId || transaction.merchantRequestId,
+            'transactions.$.checkoutRequestId': identifiers.checkoutRequestId || transaction.checkoutRequestId,
+            'transactions.$.phone': phone || transaction.phone || user.phone,
+            'transactions.$.resultCode': resultCode,
+            'transactions.$.resultDesc': stkCallback.ResultDesc,
+            'transactions.$.callbackMetadata': metadata,
+            'transactions.$.rawCallback': req.body
+        };
+
+        if (resultCode === 0) {
+            const paidAmount = roundMoney(amount);
+
+            if (!paidAmount) {
+                await User.updateOne(
+                    { _id: user._id, 'transactions._id': transaction._id },
+                    {
+                        $set: {
+                            ...commonUpdate,
+                            'transactions.$.status': 'failed',
+                            'transactions.$.failureReason': 'Successful callback was missing the paid amount'
+                        }
+                    }
+                );
+                return sendMpesaAck(res, 'Callback accepted but amount was missing');
+            }
+
+            if (Math.abs(paidAmount - Number(transaction.amount)) > 0.01) {
+                await User.updateOne(
+                    { _id: user._id, 'transactions._id': transaction._id },
+                    {
+                        $set: {
+                            ...commonUpdate,
+                            'transactions.$.status': 'failed',
+                            'transactions.$.failureReason': `Amount mismatch. Expected ${transaction.amount}, got ${paidAmount}`
+                        }
+                    }
+                );
+                return sendMpesaAck(res, 'Callback accepted but amount mismatch was detected');
+            }
+
+            if (transaction.status === 'completed') {
+                return sendMpesaAck(res, 'Callback already processed');
+            }
+
+            const balanceBefore = roundMoney(user.balance);
+            const balanceAfter = roundMoney(balanceBefore + paidAmount);
+            const updatedUser = await User.findOneAndUpdate(
+                {
+                    _id: user._id,
+                    'transactions._id': transaction._id,
+                    'transactions.status': 'pending'
+                },
+                {
+                    $inc: { balance: paidAmount },
+                    $set: {
+                        ...commonUpdate,
+                        'transactions.$.status': 'completed',
+                        'transactions.$.mpesaReceiptNumber': identifiers.mpesaReceiptNumber,
+                        'transactions.$.balanceBefore': balanceBefore,
+                        'transactions.$.balanceAfter': balanceAfter,
+                        'transactions.$.completedAt': new Date()
+                    },
+                    $unset: {
+                        'transactions.$.failureReason': ''
+                    }
+                },
+                { new: true }
+            );
+
+            if (!updatedUser) {
+                return sendMpesaAck(res, 'Callback already processed');
+            }
+
+            console.log(`M-Pesa deposit completed for ${user.username}: KES ${paidAmount}`);
+            return sendMpesaAck(res);
+        }
+
+        const failureStatus = getFailureStatus(resultCode);
+        await User.updateOne(
+            {
+                _id: user._id,
+                'transactions._id': transaction._id,
+                'transactions.status': 'pending'
+            },
+            {
+                $set: {
+                    ...commonUpdate,
+                    'transactions.$.status': failureStatus,
+                    'transactions.$.failureReason': getFailureReason(resultCode, stkCallback.ResultDesc)
+                }
+            }
         );
 
-        console.log("STK Push Response:", response.data);
-        res.json({ 
-            message: "STK Push sent. Enter your M-Pesa PIN", 
-            response: response.data,
-            transactionRef: transactionRef
-        });
-
+        console.log(`M-Pesa deposit ${failureStatus} for ${user.username}: ${stkCallback.ResultDesc}`);
+        return sendMpesaAck(res);
     } catch (error) {
-        console.error("STK Push Error:", error.response?.data || error.message);
-        res.status(500).json({ 
-            message: "Failed to send STK Push", 
-            error: error.response?.data || error.message 
-        });
+        console.error('Error processing M-Pesa callback:', error);
+        return sendMpesaAck(res, 'Callback accepted but processing failed internally');
     }
 });
 
-// Handle M-Pesa Callback
-router.post('/callback', async (req, res) => {
-    console.log("Received M-Pesa callback at:", new Date().toISOString());
-    console.log("Raw callback data:", JSON.stringify(req.body, null, 2));
-
-    // Handle different possible callback formats
-    let callbackData;
-    if (req.body.Body?.stkCallback) {
-        callbackData = req.body;
-    } else if (req.body.Body) {
-        callbackData = req.body;
-    } else {
-        callbackData = { Body: { stkCallback: req.body } };
-    }
-
-    console.log("Processed callback data:", JSON.stringify(callbackData, null, 2));
-
-    if (!callbackData.Body?.stkCallback) {
-        console.error("Invalid callback data structure:", callbackData);
-        return res.status(400).json({ message: "Invalid M-Pesa callback data" });
-    }
-
-    const resultCode = callbackData.Body.stkCallback.ResultCode;
-    const resultDesc = callbackData.Body.stkCallback.ResultDesc;
-    
-    console.log(`Processing callback with ResultCode: ${resultCode}, Description: ${resultDesc}`);
-    
-    try {
-        // Extract phone number from callback data
-        let phoneNumber;
-        if (callbackData.Body.stkCallback.PhoneNumber) {
-            phoneNumber = callbackData.Body.stkCallback.PhoneNumber;
-        } else if (callbackData.Body.stkCallback.CallbackMetadata?.Item) {
-            const phoneItem = callbackData.Body.stkCallback.CallbackMetadata.Item.find(
-                item => item.Name === "PhoneNumber"
-            );
-            if (phoneItem) {
-                phoneNumber = phoneItem.Value;
-            }
-        }
-
-        if (!phoneNumber) {
-            console.error("No phone number found in callback data");
-            return res.json({ message: "No phone number found in callback" });
-        }
-
-        const formattedPhone = String(phoneNumber).replace(/^(\+?254|0)/, "254");
-        console.log(`Looking up user with phone: ${formattedPhone}`);
-        
-        const user = await User.findOne({ phone: formattedPhone });
-        
-        if (!user) {
-            console.log(`User not found for phone: ${formattedPhone}`);
-            return res.json({ message: "User not found for this phone number" });
-        }
-
-        console.log(`Found user: ${user.username}, Current balance: ${user.balance}`);
-
-        // Find the most recent pending transaction
-        const pendingTransaction = user.transactions
-            .filter(t => t.status === 'pending' && t.type === 'deposit')
-            .sort((a, b) => b.timestamp - a.timestamp)[0];
-
-        if (!pendingTransaction) {
-            console.log("No pending transaction found for user:", user.username);
-            return res.json({ message: "No pending transaction found" });
-        }
-
-        console.log(`Found pending transaction: Amount: ${pendingTransaction.amount}, Reference: ${pendingTransaction.reference}`);
-
-        // Handle different result codes
-        switch (resultCode) {
-            case 0: // Success
-                let amount, transactionId;
-                
-                if (callbackData.Body.stkCallback.CallbackMetadata?.Item) {
-                    const metadata = callbackData.Body.stkCallback.CallbackMetadata.Item;
-                    amount = metadata.find(item => item.Name === "Amount")?.Value;
-                    transactionId = metadata.find(item => item.Name === "MpesaReceiptNumber")?.Value;
-                } else {
-                    amount = callbackData.Body.stkCallback.Amount;
-                    transactionId = callbackData.Body.stkCallback.TransactionId;
-                }
-
-                if (!amount) {
-                    console.error("Missing amount in callback");
-                    return res.json({ message: "Callback received but missing amount" });
-                }
-
-                console.log(`Processing successful transaction - Amount: ${amount}, Receipt: ${transactionId}`);
-
-                // Verify the amount matches
-                if (Math.abs(Number(amount) - pendingTransaction.amount) > 0.01) {
-                    console.error(`Amount mismatch: Expected ${pendingTransaction.amount}, got ${amount}`);
-                    return res.json({ message: "Amount mismatch in transaction" });
-                }
-
-                // Update user's balance and transaction status
-                const oldBalance = user.balance;
-                user.balance += Number(amount);
-                pendingTransaction.status = 'completed';
-                pendingTransaction.reference = transactionId;
-                
-                console.log(`Updating balance from ${oldBalance} to ${user.balance}`);
-                
-                try {
-                    await user.save();
-                    console.log(`Successfully saved user data. New balance: ${user.balance}`);
-                } catch (saveError) {
-                    console.error("Error saving user data:", saveError);
-                    throw saveError;
-                }
-                break;
-
-            case 1: // Insufficient funds
-                pendingTransaction.status = 'insufficient_funds';
-                pendingTransaction.failureReason = 'Insufficient funds in M-Pesa account';
-                await user.save();
-                console.log(`Transaction failed for ${user.username}: Insufficient funds`);
-                break;
-
-            case 2: // Wrong PIN
-                pendingTransaction.status = 'wrong_pin';
-                pendingTransaction.failureReason = 'Incorrect M-Pesa PIN entered';
-                await user.save();
-                console.log(`Transaction failed for ${user.username}: Wrong PIN`);
-                break;
-
-            case 1032: // Request cancelled by user
-                pendingTransaction.status = 'cancelled';
-                pendingTransaction.failureReason = 'Transaction cancelled by user';
-                await user.save();
-                console.log(`Transaction failed for ${user.username}: Cancelled by user`);
-                break;
-
-            case 1037: // Timeout
-                pendingTransaction.status = 'timeout';
-                pendingTransaction.failureReason = 'Transaction timed out';
-                await user.save();
-                console.log(`Transaction failed for ${user.username}: Timeout`);
-                break;
-
-            case 1031: // Rejected
-                pendingTransaction.status = 'rejected';
-                pendingTransaction.failureReason = 'Transaction was rejected';
-                await user.save();
-                console.log(`Transaction failed for ${user.username}: Rejected`);
-                break;
-
-            default:
-                pendingTransaction.status = 'failed';
-                pendingTransaction.failureReason = resultDesc || 'Transaction failed';
-                await user.save();
-                console.log(`Transaction failed for ${user.username}: ${resultDesc}`);
-        }
-
-    } catch (error) {
-        console.error("Error processing callback:", error);
-        console.error("Error stack:", error.stack);
-    }
-
-    // Always send a response to M-Pesa
-    res.status(200).json({ message: "Callback processed successfully" });
-});
-
-// Add an endpoint to check transaction status
 router.get('/transaction/:reference', verifyJWT, async (req, res) => {
     try {
-        const { reference } = req.params;
-        const username = req.user;
-        
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username: req.user });
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: 'User not found' });
         }
-        
-        const transaction = user.transactions.find(t => t.reference === reference);
+
+        const transaction = findTransaction(user, { reference: req.params.reference }) ||
+            findTransaction(user, { checkoutRequestId: req.params.reference }) ||
+            findTransaction(user, { merchantRequestId: req.params.reference }) ||
+            findTransaction(user, { mpesaReceiptNumber: req.params.reference });
+
         if (!transaction) {
-            return res.status(404).json({ message: "Transaction not found" });
+            return res.status(404).json({ message: 'Transaction not found' });
         }
-        
+
         res.json({
             status: transaction.status,
-            amount: transaction.amount,
+            amount: roundMoney(transaction.amount),
             type: transaction.type,
-            timestamp: transaction.timestamp
+            reference: transaction.reference,
+            mpesaReceiptNumber: transaction.mpesaReceiptNumber,
+            merchantRequestId: transaction.merchantRequestId,
+            checkoutRequestId: transaction.checkoutRequestId,
+            failureReason: transaction.failureReason,
+            timestamp: transaction.timestamp,
+            completedAt: transaction.completedAt
         });
-        
     } catch (error) {
-        console.error("Error checking transaction status:", error);
-        res.status(500).json({ message: "Failed to check transaction status" });
+        console.error('Error checking transaction status:', error);
+        res.status(500).json({ message: 'Failed to check transaction status' });
     }
 });
 
-// Add an endpoint to get user's balance
+router.get('/receipt/:reference', verifyJWT, async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.user });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const transaction = findTransaction(user, { reference: req.params.reference }) ||
+            findTransaction(user, { checkoutRequestId: req.params.reference }) ||
+            findTransaction(user, { merchantRequestId: req.params.reference }) ||
+            findTransaction(user, { mpesaReceiptNumber: req.params.reference });
+
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        res.json(buildWalletReceipt(user, transaction));
+    } catch (error) {
+        console.error('Error generating wallet receipt:', error);
+        res.status(500).json({ message: 'Failed to generate receipt' });
+    }
+});
+
 router.get('/balance', verifyJWT, async (req, res) => {
     try {
-        const username = req.user;
-        
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username: req.user });
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: 'User not found' });
         }
-        
+
+        const transactions = (user.transactions || [])
+            .slice()
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .map((transaction) => ({
+                type: transaction.type,
+                amount: roundMoney(transaction.amount),
+                timestamp: transaction.timestamp,
+                status: transaction.status,
+                reference: transaction.reference,
+                mpesaReceiptNumber: transaction.mpesaReceiptNumber,
+                failureReason: transaction.failureReason,
+                completedAt: transaction.completedAt
+            }));
+
         res.json({
-            balance: user.balance || 0,
-            transactions: user.transactions || []
+            balance: roundMoney(user.balance || 0),
+            transactions
         });
-        
     } catch (error) {
-        console.error("Error fetching balance:", error);
-        res.status(500).json({ message: "Failed to fetch balance" });
+        console.error('Error fetching balance:', error);
+        res.status(500).json({ message: 'Failed to fetch balance' });
     }
 });
 

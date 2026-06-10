@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: students-cafeteria-system
+    env: node
+    plan: free
+    repo: "" # set your GitHub repo URL or connect via Render UI
+    branch: main
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    autoDeploy: true

@@ -70,6 +70,19 @@ const userSchema = new Schema({
             default: 'pending'
         },
         reference: String,
+        mpesaReceiptNumber: String,
+        merchantRequestId: String,
+        checkoutRequestId: String,
+        phone: String,
+        accountReference: String,
+        description: String,
+        resultCode: Number,
+        resultDesc: String,
+        balanceBefore: Number,
+        balanceAfter: Number,
+        completedAt: Date,
+        callbackMetadata: mongoose.Schema.Types.Mixed,
+        rawCallback: mongoose.Schema.Types.Mixed,
         failureReason: String      // Added to store detailed failure reason
     }],
     // Existing fields for password reset functionality

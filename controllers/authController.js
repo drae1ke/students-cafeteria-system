@@ -1,6 +1,7 @@
 const User = require('../model/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { refreshCookieOptions } = require('../utils/cookieOptions');
 
 const handleLogin = async (req, res) => {
     const { regno, pwd } = req.body;
@@ -44,12 +45,7 @@ const handleLogin = async (req, res) => {
         await foundUser.save();
 
         // Store the access token in localStorage after successful login
-        res.cookie('jwt', refreshToken, { 
-            httpOnly: true, 
-            secure: true, 
-            sameSite: 'None', 
-            maxAge: 24 * 60 * 60 * 1000 
-        });
+        res.cookie('jwt', refreshToken, refreshCookieOptions);
 
         // Send both tokens to the client
         res.json({ 

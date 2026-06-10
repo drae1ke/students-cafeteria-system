@@ -30,14 +30,30 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Completed', 'Cancelled'],
+        enum: ['Pending', 'Processing', 'Ready', 'Completed', 'Cancelled'],
         default: 'Pending'
+    },
+    subtotalAmount: {
+        type: Number,
+        min: 0
+    },
+    subsidyAmount: {
+        type: Number,
+        min: 0,
+        default: 0
     },
     totalAmount: {
         type: Number,
         required: true,
         min: 0
-    }
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['unpaid', 'paid', 'refunded'],
+        default: 'unpaid'
+    },
+    paymentReference: String,
+    receiptNumber: String
 });
 
 module.exports = mongoose.model('Order', orderSchema);
