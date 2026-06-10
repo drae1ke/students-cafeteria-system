@@ -7,23 +7,20 @@ const handleLogin = async (req, res) => {
     const { regno, pwd } = req.body;
     
     if (!regno || !pwd) {
-        req.flash('error', 'Registration number and password are required.');
-        return res.redirect('signin'); // Redirect to login page
+        return res.status(400).json({ message: 'Registration number and password are required.' });
     }
 
     try {
-        const foundUser = await User.findOne({ regno: regno }).exec();
+        const foundUser = await User.findOne({ regno: regno.trim() }).exec();
         
         if (!foundUser) {
-            req.flash('error', 'User not found');
-            return res.redirect('signin');
+            return res.status(401).json({ message: 'Invalid registration number or password.' });
         }
 
         const match = await bcrypt.compare(pwd, foundUser.password);
         
         if (!match) {
-            req.flash('error', 'Invalid password');
-            return res.redirect('signin');
+            return res.status(401).json({ message: 'Invalid registration number or password.' });
         }
 
         // Successful login logic
@@ -55,8 +52,8 @@ const handleLogin = async (req, res) => {
         });
 
     } catch (err) {
-        req.flash('error', 'An error occurred during login');
-        res.redirect('signin');
+        console.error('Login error:', err);
+        res.status(500).json({ message: 'An error occurred during login.' });
     }
 }
 

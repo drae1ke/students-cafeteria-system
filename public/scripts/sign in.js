@@ -22,6 +22,17 @@ function validatePassword(password) {
   return password.length >= 8;
 }
 
+async function parseJsonResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  throw new Error(text.startsWith('<!DOCTYPE') ? 'Server returned an HTML page instead of JSON.' : text);
+}
+
 // Password Visibility Toggle
 function togglePassword(fieldId) {
   const passwordField = document.getElementById(fieldId);
@@ -218,20 +229,20 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify(formData)
         });
 
-        const data = await response.json();
+        const data = await parseJsonResponse(response);
         showLoading(false);
 
-        if (data.accessToken) {
+        if (response.ok && data.accessToken) {
           // Store the access token
           localStorage.setItem('accessToken', data.accessToken);
           window.location.href = '/e-wallet';
         } else {
-          showError('login-regno', 'Login failed');
+          showError('login-regno', data.message || 'Login failed');
         }
       } catch (error) {
         showLoading(false);
         console.error('Login error:', error);
-        showError('login-regno', 'An error occurred during login');
+        showError('login-regno', error.message || 'An error occurred during login');
       }
     });
   }
@@ -274,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify(formData)
         });
 
-        const data = await response.json().catch(() => ({}));
+        const data = await parseJsonResponse(response).catch(() => ({}));
         showLoading(false);
 
         if (response.ok && data.accessToken) {

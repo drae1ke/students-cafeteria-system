@@ -12,10 +12,14 @@ const credentials = require('./middleware/credentials');
 const flashMiddleware = require('./middleware/flash');
 const mongoose = require('mongoose');
 const connectDB = require('./config/dbConn');
+const { validateEnv } = require('./config/env');
 const PORT = process.env.PORT || 3500;
+
+validateEnv();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('trust proxy', 1);
 
 // Connect to MongoDB
 connectDB();
